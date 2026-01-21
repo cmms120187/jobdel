@@ -48,7 +48,6 @@
                             <div class="flex-1">
                                 <label for="user_id" class="block text-sm font-medium text-gray-700 mb-1">Filter by User</label>
                                 <select name="user_id" id="user_id" onchange="this.form.submit()" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="">Semua User (Saya + Bawahan)</option>
                                     @foreach($filterUsers as $filterUser)
                                         <option value="{{ $filterUser->id }}" {{ (isset($filterUserId) && $filterUserId == $filterUser->id) ? 'selected' : '' }}>
                                             {{ $filterUser->name }} ({{ $filterUser->nik }})
@@ -60,6 +59,11 @@
                                             @endif
                                         </option>
                                     @endforeach
+                                    @if($filterUsers->count() > 1)
+                                        <option value="all" {{ (isset($filterUserId) && $filterUserId == 'all') ? 'selected' : '' }}>
+                                            Semua User (Saya + Bawahan)
+                                        </option>
+                                    @endif
                                 </select>
                             </div>
                             @if(isset($filterUserId))

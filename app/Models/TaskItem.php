@@ -32,6 +32,17 @@ class TaskItem extends Model
     ];
 
     /**
+     * Get completed_at in Asia/Jakarta timezone
+     */
+    public function getCompletedAtJakartaAttribute()
+    {
+        if (!$this->completed_at) {
+            return null;
+        }
+        return $this->completed_at->setTimezone('Asia/Jakarta');
+    }
+
+    /**
      * Check if task item is overdue
      */
     public function isOverdue(): bool

@@ -9,6 +9,8 @@ use App\Http\Controllers\ProgressUpdateController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Leader\SubordinateController;
+use App\Http\Controllers\Leader\ReportController as LeaderReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,6 +30,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Tasks routes
     Route::resource('tasks', TaskController::class);
+    // Secure file download for task attachments
+    Route::get('/tasks/{task}/file/{fileKey}', [TaskController::class, 'downloadFile'])->name('tasks.download-file');
+    Route::get('/tasks/{task}/preview/{fileKey}', [TaskController::class, 'previewFile'])->name('tasks.preview-file');
+    Route::post('/tasks/{task}/attachments', [TaskController::class, 'uploadAttachment'])->name('tasks.upload-attachment');
+    Route::delete('/tasks/{task}/attachments/{attachment}', [TaskController::class, 'deleteAttachment'])->name('tasks.delete-attachment');
     Route::post('/tasks/{task}/duplicate', [TaskController::class, 'duplicate'])->name('tasks.duplicate');
     
     // Task Items routes (nested under tasks)
@@ -53,10 +60,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Progress updates routes
     Route::post('/delegations/{delegation}/progress', [ProgressUpdateController::class, 'store'])->name('progress.store');
     Route::delete('/progress/{progressUpdate}', [ProgressUpdateController::class, 'destroy'])->name('progress.destroy');
+    // Secure download for progress update attachments
+    Route::get('/progress/{progressUpdate}/file/{index}', [ProgressUpdateController::class, 'downloadAttachment'])->name('progress.download-file');
     
     // Reports routes
     Route::get('/reports/timeline', [ReportController::class, 'timeline'])->name('reports.timeline');
     Route::get('/reports/tasks/{task}/print', [ReportController::class, 'printTask'])->name('reports.print-task');
+    
+    // Leader routes: recursive subordinates
+    Route::get('/leader/subordinates', [SubordinateController::class, 'index'])->name('leader.subordinates.index');
+    Route::get('/leader/subordinates/{id}', [SubordinateController::class, 'show'])->name('leader.subordinates.show');
+    // Leader reports
+    Route::get('/leader/reports/overview', [LeaderReportController::class, 'overview'])->name('leader.reports.overview');
+    Route::get('/leader/reports/tasks', [LeaderReportController::class, 'tasks'])->name('leader.reports.tasks');
+    Route::get('/leader/reports/work-time', [LeaderReportController::class, 'workTimeReport'])->name('leader.reports.work-time');
+    Route::get('/leader/reports/work-time-history', [LeaderReportController::class, 'workTimeHistory'])->name('leader.reports.work-time-history');
+    Route::get('/leader/reports/export', [LeaderReportController::class, 'export'])->name('leader.reports.export');
     
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

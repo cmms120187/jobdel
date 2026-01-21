@@ -109,6 +109,13 @@ class User extends Authenticatable
                 ->get();
         }
 
+        // Prefer leader/subordinate relation: if this user has direct subordinates
+        // (users with leader_id = this user's id), return them plus self.
+        $directSubs = $this->subordinates()->with('position')->orderBy('name')->get();
+        if ($directSubs->isNotEmpty()) {
+            return $directSubs->push($this->load('position'))->unique('id')->sortBy('name')->values();
+        }
+
         // If user has no position, only return self
         if (!$this->position) {
             return collect([$this->load('position')]);
@@ -116,7 +123,7 @@ class User extends Authenticatable
 
         $userLevel = $this->position->level;
 
-        // Get users with position level lower than or equal to current user (includes self)
+        // Fallback: Get users with position level lower than or equal to current user (includes self)
         return User::whereHas('position', function($query) use ($userLevel) {
                 $query->where('level', '<=', $userLevel);
             })
@@ -131,6 +138,11 @@ class User extends Authenticatable
      */
     public function getSuperiors()
     {
+        // If leader relation exists, return direct leader first
+        if ($this->leader) {
+            return collect([$this->leader->load('position')]);
+        }
+
         // Superuser has no superiors
         if ($this->position && $this->position->name === 'Superuser') {
             return collect([]);
@@ -143,7 +155,7 @@ class User extends Authenticatable
 
         $userLevel = $this->position->level;
 
-        // Get users with position level higher than current user
+        // Fallback: Get users with position level higher than current user
         return User::whereHas('position', function($query) use ($userLevel) {
                 $query->where('level', '>', $userLevel);
             })
@@ -166,6 +178,28 @@ class User extends Authenticatable
                 ->get();
         }
 
+        // If user has direct subordinates via leader_id, prefer that set
+        $directSubs = $this->subordinates()->with('position')->orderBy('name')->get();
+        if ($directSubs->isNotEmpty()) {
+            // Collect recursively (breadth-first) to include subordinates of subordinates
+            $all = collect();
+            $queue = $directSubs->values();
+
+            while ($queue->isNotEmpty()) {
+                $current = $queue->shift();
+                $all->push($current->load('position'));
+
+                $children = $current->subordinates()->with('position')->orderBy('name')->get();
+                if ($children->isNotEmpty()) {
+                    foreach ($children as $child) {
+                        $queue->push($child);
+                    }
+                }
+            }
+
+            return $all->unique('id')->sortBy('name')->values();
+        }
+
         // If user has no position, return empty collection
         if (!$this->position) {
             return collect([]);
@@ -173,7 +207,7 @@ class User extends Authenticatable
 
         $userLevel = $this->position->level;
 
-        // Get users with position level lower than current user
+        // Fallback: Get users with position level lower than current user
         return User::whereHas('position', function($query) use ($userLevel) {
                 $query->where('level', '<', $userLevel);
             })
@@ -187,7 +221,7 @@ class User extends Authenticatable
      */
     public function getSubordinatesIncludingSelf()
     {
-        $subordinates = $this->getSubordinates();
-        return $subordinates->push($this->load('position'))->unique('id')->sortBy('name')->values();
+    $subordinates = $this->getSubordinates();
+    return $subordinates->push($this->load('position'))->unique('id')->sortBy('name')->values();
     }
 }

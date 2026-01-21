@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\TaskHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 
 class TaskController extends Controller
@@ -26,62 +29,46 @@ class TaskController extends Controller
         // Save current page to session
         session(['tasks_page' => $page]);
         
-        // Get filter user_id
+        // Get filter user_id (default to current user if not provided)
         $filterUserId = $request->get('user_id');
+        
+        // If no filter provided, default to current user
+        if ($filterUserId === null || $filterUserId === '') {
+            $filterUserId = $user->id;
+        }
         
         // Get subordinates for filter dropdown
         $subordinates = $user->getSubordinatesIncludingSelf();
         
         // Validate filter user_id - user must be able to see that user (subordinate or self)
-        if ($filterUserId) {
+        // If filterUserId is 'all', allow it (will show all subordinates)
+        if ($filterUserId !== 'all') {
             $allowedUserIds = $subordinates->pluck('id')->toArray();
             if (!in_array($filterUserId, $allowedUserIds)) {
-                $filterUserId = null; // Reset if not allowed
+                $filterUserId = $user->id; // Default to current user if not allowed
             }
         }
         
         // Build query
         $query = Task::with(['room', 'creator', 'delegations.delegatedTo']);
         
-        if ($isSuperuser) {
-            // Superuser can see all tasks
-            if ($filterUserId) {
-                // Filter by specific user
-                $query->where(function($q) use ($filterUserId) {
-                    $q->where('created_by', $filterUserId)
-                      ->orWhereHas('delegations', function($dq) use ($filterUserId) {
-                          $dq->where('delegated_to', $filterUserId);
-                      });
-                });
-            }
+        if ($filterUserId === 'all') {
+            // Show all tasks for subordinates (including self)
+            $subordinateIds = $subordinates->pluck('id')->toArray();
+            $query->where(function($q) use ($subordinateIds) {
+                $q->whereIn('created_by', $subordinateIds)
+                  ->orWhereHas('delegations', function($dq) use ($subordinateIds) {
+                      $dq->whereIn('delegated_to', $subordinateIds);
+                  });
+            });
         } else {
-            if ($filterUserId) {
-                // Filter by specific subordinate user
-                $query->where(function($q) use ($filterUserId) {
-                    $q->where('created_by', $filterUserId)
-                      ->orWhereHas('delegations', function($dq) use ($filterUserId) {
-                          $dq->where('delegated_to', $filterUserId);
-                      });
-                });
-            } else {
-                // Show tasks created by user OR tasks delegated to user OR tasks of subordinates
-                $subordinateIds = $subordinates->pluck('id')->toArray();
-                
-                $query->where(function($q) use ($user, $subordinateIds) {
-                    // User's own tasks
-                    $q->where('created_by', $user->id)
-                      ->orWhereHas('delegations', function($dq) use ($user) {
-                          $dq->where('delegated_to', $user->id);
-                      })
-                      // Subordinates' tasks
-                      ->orWhere(function($sq) use ($subordinateIds) {
-                          $sq->whereIn('created_by', $subordinateIds)
-                            ->orWhereHas('delegations', function($dq) use ($subordinateIds) {
-                                $dq->whereIn('delegated_to', $subordinateIds);
-                            });
-                      });
-                });
-            }
+            // Filter by specific user (default is current user)
+            $query->where(function($q) use ($filterUserId) {
+                $q->where('created_by', $filterUserId)
+                  ->orWhereHas('delegations', function($dq) use ($filterUserId) {
+                      $dq->where('delegated_to', $filterUserId);
+                  });
+            });
         }
         
         $tasks = $query->latest()->paginate(10, ['*'], 'page', $page);
@@ -129,8 +116,9 @@ class TaskController extends Controller
             'start_date' => 'nullable|date',
             'requested_by' => 'nullable|exists:users,id',
             'add_request' => 'nullable|string|max:255',
-            'file_support_1' => 'nullable|file|max:10240',
-            'file_support_2' => 'nullable|file|max:10240',
+            // Allow all file types (no mimes restriction)
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:51200', // Max 50MB per file
             'approve_level' => 'nullable|integer|min:0',
             'delegated_to' => 'required|array|min:1',
             'delegated_to.*' => ['required', 'exists:users,id', function ($attribute, $value, $fail) use ($delegatableUserIds) {
@@ -140,18 +128,6 @@ class TaskController extends Controller
             }],
             'delegation_notes' => 'nullable|string',
         ]);
-
-        // Handle file uploads
-        $fileSupport1 = null;
-        $fileSupport2 = null;
-        
-        if ($request->hasFile('file_support_1')) {
-            $fileSupport1 = $request->file('file_support_1')->store('task-files', 'public');
-        }
-        
-        if ($request->hasFile('file_support_2')) {
-            $fileSupport2 = $request->file('file_support_2')->store('task-files', 'public');
-        }
 
         $task = Task::create([
             'room_id' => $validated['room_id'] ?? null,
@@ -164,11 +140,25 @@ class TaskController extends Controller
             'start_date' => $validated['start_date'] ?? null,
             'requested_by' => $validated['requested_by'] ?? null,
             'add_request' => $validated['add_request'] ?? null,
-            'file_support_1' => $fileSupport1,
-            'file_support_2' => $fileSupport2,
             'approve_level' => $validated['approve_level'] ?? 0,
             'created_by' => Auth::id(),
         ]);
+
+        // Handle file attachments uploads
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $filePath = $file->store('task-attachments', 'local');
+                
+                TaskAttachment::create([
+                    'task_id' => $task->id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'uploaded_by' => Auth::id(),
+                ]);
+            }
+        }
 
         // Create history record for task creation
         TaskHistory::create([
@@ -235,7 +225,190 @@ class TaskController extends Controller
             ->orderBy('name')
             ->get();
         
+        // Load attachments
+        $task->load('attachments.uploader');
+        
         return view('tasks.show', compact('task', 'users', 'currentUser'));
+    }
+
+    /**
+     * Securely download a task attachment.
+     * fileKey is either "file_support_1" or "file_support_2".
+     */
+    public function downloadFile(Task $task, $fileKey)
+    {
+        $user = Auth::user();
+        
+        // Check authorization: Only creator or users in delegation can access
+        $isCreator = $task->created_by === $user->id;
+        $isInDelegation = $task->delegations()->where('delegated_to', $user->id)->exists();
+        $isSuperuser = $user->position && $user->position->name === 'Superuser';
+        
+        if (!$isCreator && !$isInDelegation && !$isSuperuser) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses file ini.');
+        }
+
+        // Handle old file_support_1 and file_support_2 for backward compatibility
+        if (in_array($fileKey, ['file_support_1', 'file_support_2'])) {
+            $filePath = $task->{$fileKey};
+            if (!$filePath) {
+                abort(404);
+            }
+
+            // Ensure file exists on the private disk
+            if (!Storage::disk('local')->exists($filePath)) {
+                abort(404);
+            }
+
+            // Stream download with original filename if possible
+            $basename = basename($filePath);
+            $mime = Storage::disk('local')->mimeType($filePath) ?: 'application/octet-stream';
+
+            return Storage::disk('local')->download($filePath, $basename, ['Content-Type' => $mime]);
+        }
+
+        // Handle new attachment system
+        $attachment = TaskAttachment::where('task_id', $task->id)
+            ->where('id', $fileKey)
+            ->first();
+
+        if (!$attachment) {
+            abort(404);
+        }
+
+        // Ensure file exists on the private disk
+        if (!Storage::disk('local')->exists($attachment->file_path)) {
+            abort(404);
+        }
+
+        // Stream download with original filename
+        $mime = Storage::disk('local')->mimeType($attachment->file_path) ?: $attachment->file_type ?: 'application/octet-stream';
+
+        return Storage::disk('local')->download($attachment->file_path, $attachment->original_name, ['Content-Type' => $mime]);
+    }
+
+    /**
+     * Upload a new attachment to a task.
+     */
+    public function uploadAttachment(Request $request, Task $task)
+    {
+        $policy = new \App\Policies\TaskAttachmentPolicy();
+        if (!$policy->create(Auth::user(), $task)) {
+            abort(403, 'Anda tidak memiliki izin untuk mengupload file.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'files.*' => 'required|file|max:10240', // Max 10MB per file
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $uploadedFiles = [];
+        $user = Auth::user();
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $filePath = $file->store('task_attachments', 'local');
+                $fileType = $file->getMimeType();
+                $fileSize = $file->getSize();
+
+                $attachment = TaskAttachment::create([
+                    'task_id' => $task->id,
+                    'original_name' => $originalName,
+                    'file_path' => $filePath,
+                    'file_type' => $fileType,
+                    'file_size' => $fileSize,
+                    'uploaded_by' => $user->id,
+                    'description' => $request->input('description'),
+                ]);
+
+                $uploadedFiles[] = $attachment;
+            }
+        }
+
+        return redirect()->back()
+            ->with('success', count($uploadedFiles) . ' file berhasil diupload.');
+    }
+
+    /**
+     * Delete a task attachment.
+     */
+    public function deleteAttachment(Task $task, TaskAttachment $attachment)
+    {
+        // Ensure attachment belongs to this task
+        if ($attachment->task_id !== $task->id) {
+            abort(404);
+        }
+
+        $policy = new \App\Policies\TaskAttachmentPolicy();
+        if (!$policy->delete(Auth::user(), $attachment)) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus file ini.');
+        }
+
+        // Delete file from storage
+        if (Storage::disk('local')->exists($attachment->file_path)) {
+            Storage::disk('local')->delete($attachment->file_path);
+        }
+
+        $attachment->delete();
+
+        return redirect()->back()
+            ->with('success', 'File berhasil dihapus.');
+    }
+
+    /**
+     * Preview a task attachment (for images and PDFs).
+     */
+    public function previewFile(Task $task, $fileKey)
+    {
+        $user = Auth::user();
+        
+        // Check authorization: Only creator or users in delegation can access
+        $isCreator = $task->created_by === $user->id;
+        $isInDelegation = $task->delegations()->where('delegated_to', $user->id)->exists();
+        $isRequester = $task->requested_by === $user->id;
+        $isSuperuser = $user->position && $user->position->name === 'Superuser';
+        
+        if (!$isCreator && !$isInDelegation && !$isRequester && !$isSuperuser) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses file ini.');
+        }
+
+        // Handle old file_support_1 and file_support_2 for backward compatibility
+        if (in_array($fileKey, ['file_support_1', 'file_support_2'])) {
+            $filePath = $task->{$fileKey};
+            if (!$filePath) {
+                abort(404);
+            }
+
+            if (!Storage::disk('local')->exists($filePath)) {
+                abort(404);
+            }
+
+            $mime = Storage::disk('local')->mimeType($filePath) ?: 'application/octet-stream';
+            return response()->file(Storage::disk('local')->path($filePath), ['Content-Type' => $mime]);
+        }
+
+        // Handle new attachment system
+        $attachment = TaskAttachment::where('task_id', $task->id)
+            ->where('id', $fileKey)
+            ->first();
+
+        if (!$attachment) {
+            abort(404);
+        }
+
+        if (!Storage::disk('local')->exists($attachment->file_path)) {
+            abort(404);
+        }
+
+        $mime = Storage::disk('local')->mimeType($attachment->file_path) ?: $attachment->file_type ?: 'application/octet-stream';
+        return response()->file(Storage::disk('local')->path($attachment->file_path), ['Content-Type' => $mime]);
     }
 
     /**
@@ -250,6 +423,9 @@ class TaskController extends Controller
         $rooms = Room::orderBy('room')->get();
         // Load delegations to check if task already has delegations
         $task->load('delegations');
+        // Load attachments
+        $task->load('attachments.uploader');
+        
         return view('tasks.edit', compact('task', 'users', 'superiors', 'rooms'));
     }
 
@@ -273,8 +449,9 @@ class TaskController extends Controller
             'start_date' => 'nullable|date',
             'requested_by' => 'nullable|exists:users,id',
             'add_request' => 'nullable|string|max:255',
-            'file_support_1' => 'nullable|file|max:10240',
-            'file_support_2' => 'nullable|file|max:10240',
+            // Allow all file types (no mimes restriction)
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:51200', // Max 50MB per file
             'approve_level' => 'nullable|integer|min:0',
             'delegated_to' => 'nullable|array',
             'delegated_to.*' => 'exists:users,id',
@@ -284,23 +461,6 @@ class TaskController extends Controller
         // Store old values for history (before update)
         $oldValues = $task->getAttributes();
         
-        // Handle file uploads
-        if ($request->hasFile('file_support_1')) {
-            // Delete old file if exists
-            if ($task->file_support_1) {
-                \Storage::disk('public')->delete($task->file_support_1);
-            }
-            $validated['file_support_1'] = $request->file('file_support_1')->store('task-files', 'public');
-        }
-        
-        if ($request->hasFile('file_support_2')) {
-            // Delete old file if exists
-            if ($task->file_support_2) {
-                \Storage::disk('public')->delete($task->file_support_2);
-            }
-            $validated['file_support_2'] = $request->file('file_support_2')->store('task-files', 'public');
-        }
-
         // Status tidak bisa diubah manual di form, diambil dari progress detail pekerjaan
         // Hapus status dari validated jika ada, karena akan dihitung dari task items
         unset($validated['status']);
@@ -490,19 +650,9 @@ class TaskController extends Controller
         // Task items juga TIDAK diduplikasi
         // Detail pekerjaan perlu dibuat baru sesuai kebutuhan
 
-        // Create history record
-        try {
-            TaskHistory::create([
-                'task_id' => $newTask->id,
-                'updated_by' => Auth::id(),
-                'action' => 'created',
-                'old_values' => null,
-                'new_values' => $newTask->toArray(),
-                'notes' => 'Task duplicated from: ' . $task->title . ' (delegations dan detail pekerjaan tidak diduplikasi - silakan pilih delegasi dan buat detail pekerjaan baru)',
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to create task history for duplicate: ' . $e->getMessage());
-        }
+        // Task history TIDAK diduplikasi
+        // Task yang di-duplikat adalah task baru yang dikerjakan ulang di hari yang lain
+        // Jadi tidak perlu membawa history dari task sebelumnya
 
         // Redirect to edit page of the new task
         return redirect()->route('tasks.edit', $newTask)

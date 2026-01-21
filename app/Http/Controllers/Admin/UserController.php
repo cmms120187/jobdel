@@ -15,11 +15,34 @@ class UserController extends Controller
     {
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            if (!$user || !$user->position || $user->position->name !== 'Superuser') {
-                abort(403, 'Unauthorized access. Only Superuser can access this page.');
+            if (!$user || !$user->position) {
+                abort(403, 'Unauthorized access.');
             }
-            return $next($request);
+
+            // Superuser can access everything
+            if ($user->position->name === 'Superuser') {
+                return $next($request);
+            }
+
+            // Leaders (position level > 1) are allowed to access admin users
+            // but will be limited to viewing their own subordinates in the index.
+            if ($user->position->level > 1) {
+                return $next($request);
+            }
+
+            abort(403, 'Unauthorized access.');
         });
+    }
+
+    /**
+     * Only Superuser may modify users (create/store/edit/update/destroy).
+     */
+    protected function authorizeSuperuser()
+    {
+        $user = Auth::user();
+        if (!$user || !$user->position || $user->position->name !== 'Superuser') {
+            abort(403, 'Only Superuser may perform this action.');
+        }
     }
 
     /**
@@ -33,9 +56,21 @@ class UserController extends Controller
         // Save current page to session
         session(['admin_users_page' => $page]);
         
-        $users = User::with(['position', 'leader.position'])
-            ->orderBy('name')
-            ->paginate(15, ['*'], 'page', $page);
+        $currentUser = Auth::user();
+
+        if ($currentUser->position && $currentUser->position->name === 'Superuser') {
+            $usersQuery = User::with(['position', 'leader.position'])->orderBy('name');
+        } else {
+            // Leaders can only see their direct subordinates and themselves
+            $usersQuery = User::with(['position', 'leader.position'])
+                ->where(function($q) use ($currentUser) {
+                    $q->where('leader_id', $currentUser->id)
+                      ->orWhere('id', $currentUser->id);
+                })
+                ->orderBy('name');
+        }
+
+        $users = $usersQuery->paginate(15, ['*'], 'page', $page);
         
         return view('admin.users.index', compact('users'));
     }
@@ -45,6 +80,7 @@ class UserController extends Controller
      */
     public function create()
     {
+    $this->authorizeSuperuser();
         $positions = Position::orderBy('level')->get();
         $leaders = User::whereHas('position', function($query) {
             $query->where('level', '>', 1); // Exclude Staff level
@@ -58,6 +94,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+    $this->authorizeSuperuser();
         $validated = $request->validate([
             'nik' => 'required|string|min:5|max:255|unique:users,nik',
             'name' => 'required|string|max:255',
@@ -97,6 +134,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
+    $this->authorizeSuperuser();
         $positions = Position::orderBy('level')->get();
         $leaders = User::where('id', '!=', $user->id)
             ->whereHas('position', function($query) use ($user) {
@@ -119,6 +157,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+    $this->authorizeSuperuser();
         $validated = $request->validate([
             'nik' => 'required|string|min:5|max:255|unique:users,nik,' . $user->id,
             'name' => 'required|string|max:255',
@@ -156,6 +195,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+    $this->authorizeSuperuser();
         // Prevent deleting superuser
         if ($user->position && $user->position->name === 'Superuser') {
             return redirect()->back()

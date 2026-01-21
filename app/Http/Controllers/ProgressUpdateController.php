@@ -22,11 +22,11 @@ class ProgressUpdateController extends Controller
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120', // Max 5MB per photo
         ]);
 
-        // Handle photo uploads
+        // Handle photo uploads (store on private local disk)
         $attachments = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $photo) {
-                $attachments[] = $photo->store('progress-photos', 'public');
+                $attachments[] = $photo->store('progress-photos', 'local');
             }
         }
 
@@ -58,8 +58,53 @@ class ProgressUpdateController extends Controller
     public function destroy(ProgressUpdate $progressUpdate)
     {
         $delegation = $progressUpdate->delegation;
+        // Delete attachments from storage
+        if ($progressUpdate->attachments && is_array($progressUpdate->attachments)) {
+            foreach ($progressUpdate->attachments as $attachment) {
+                \Storage::disk('local')->delete($attachment);
+            }
+        }
+
         $progressUpdate->delete();
-        
+
         return redirect()->back()->with('success', 'Update progress berhasil dihapus.');
+    }
+
+    /**
+     * Download a progress update attachment (index is 0-based)
+     */
+    public function downloadAttachment(\App\Models\ProgressUpdate $progressUpdate, $index)
+    {
+        $delegation = $progressUpdate->delegation;
+
+        // Only allow access to: superuser, task creator, or delegated user
+        $user = Auth::user();
+        if ($user->position && $user->position->name === 'Superuser') {
+            // allowed
+        } elseif ($delegation->task->created_by === $user->id) {
+            // allowed
+        } elseif ($delegation->delegated_to === $user->id) {
+            // allowed
+        } else {
+            abort(403);
+        }
+
+        if (!$progressUpdate->attachments || !is_array($progressUpdate->attachments)) {
+            abort(404);
+        }
+
+        $index = (int) $index;
+        if (!isset($progressUpdate->attachments[$index])) {
+            abort(404);
+        }
+
+        $filePath = $progressUpdate->attachments[$index];
+        if (!\Storage::disk('local')->exists($filePath)) {
+            abort(404);
+        }
+
+        $basename = basename($filePath);
+        $mime = \Storage::disk('local')->mimeType($filePath) ?: 'application/octet-stream';
+        return \Storage::disk('local')->download($filePath, $basename, ['Content-Type' => $mime]);
     }
 }

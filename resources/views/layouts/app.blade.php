@@ -33,8 +33,13 @@
 
             <!-- Page Content -->
             <main class="pt-16">
-                {{ $slot }}
+                @hasSection('content')
+                    @yield('content')
+                @else
+                    {{ $slot ?? '' }}
+                @endif
             </main>
         </div>
+    @stack('scripts')
     </body>
 </html>

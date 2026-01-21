@@ -128,18 +128,15 @@
                             <x-input-error :messages="$errors->get('due_date')" class="mt-2" />
                         </div>
 
-                        <!-- File Support 1 -->
+                        <!-- Attachments -->
                         <div class="mb-4">
-                            <x-input-label for="file_support_1" :value="__('File Support 1')" />
-                            <x-text-input id="file_support_1" class="block mt-1 w-full" type="file" name="file_support_1" />
-                            <x-input-error :messages="$errors->get('file_support_1')" class="mt-2" />
-                        </div>
-
-                        <!-- File Support 2 -->
-                        <div class="mb-4">
-                            <x-input-label for="file_support_2" :value="__('File Support 2')" />
-                            <x-text-input id="file_support_2" class="block mt-1 w-full" type="file" name="file_support_2" />
-                            <x-input-error :messages="$errors->get('file_support_2')" class="mt-2" />
+                            <x-input-label for="attachments" :value="__('Dokumen Pendukung (Bisa upload multiple files)')" />
+                            <x-text-input id="attachments" class="block mt-1 w-full" type="file" name="attachments[]" multiple />
+                            <x-input-error :messages="$errors->get('attachments')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('attachments.*')" class="mt-2" />
+                            <p class="mt-1 text-xs text-gray-500">
+                                Anda dapat mengupload berbagai jenis dokumen (PDF, Word, Excel, Image, dll). Maksimal 50MB per file.
+                            </p>
                         </div>
 
                         <!-- Approve Level -->

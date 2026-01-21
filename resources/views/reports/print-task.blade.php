@@ -327,9 +327,10 @@
                 if ($item->updates) {
                     foreach ($item->updates as $update) {
                         if ($update->attachments && is_array($update->attachments)) {
-                            foreach ($update->attachments as $photo) {
+                            foreach ($update->attachments as $idx => $photo) {
                                 $allPhotos->push([
-                                    'photo' => $photo,
+                                    // build secure download URL for this attachment
+                                    'photo' => route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $idx]),
                                     'update_date' => $update->update_date ? \Carbon\Carbon::parse($update->update_date)->format('d M Y') : $update->created_at->format('d M Y'),
                                     'notes' => $update->notes,
                                     'updater' => $update->updater->name ?? 'Unknown',
@@ -397,7 +398,7 @@
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
                     @foreach($itemData['photos'] as $photoData)
                         <div style="page-break-inside: avoid; border: 2px solid #e2e8f0; border-radius: 6px; padding: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                            <img src="{{ Storage::url($photoData['photo']) }}" alt="Foto Dokumentasi" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                            <img src="{{ $photoData['photo'] }}" alt="Foto Dokumentasi" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 7pt; color: #475569;">
                                 <p style="margin: 2px 0; font-weight: bold; color: #6366f1;">📅 {{ $photoData['update_date'] }}</p>
                                 <p style="margin: 2px 0;">👤 Oleh: {{ $photoData['updater'] }}</p>

@@ -208,7 +208,9 @@
                                                     if ($taskItem && $taskItem->updates) {
                                                         foreach ($taskItem->updates as $update) {
                                                             if ($update->attachments && is_array($update->attachments)) {
-                                                                $allPhotos = $allPhotos->merge($update->attachments);
+                                                                foreach ($update->attachments as $idx => $attachment) {
+                                                                    $allPhotos->push(route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $idx]));
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -357,13 +359,13 @@
             titleElement.textContent = 'Dokumentasi: ' + title;
             contentElement.innerHTML = '';
             
-            const storageUrl = '{{ Storage::url("") }}';
-            photos.forEach(function(photo) {
+            // photos already contains full secure URLs to the attachment download route
+            photos.forEach(function(photoUrl) {
                 const div = document.createElement('div');
                 div.className = 'relative';
                 div.innerHTML = `
-                    <a href="` + storageUrl + photo + `" target="_blank" class="block">
-                        <img src="` + storageUrl + photo + `" alt="Foto" class="w-full h-32 object-cover rounded border border-gray-300 hover:border-blue-500 transition-colors cursor-pointer">
+                    <a href="` + photoUrl + `" target="_blank" class="block">
+                        <img src="` + photoUrl + `" alt="Foto" class="w-full h-32 object-cover rounded border border-gray-300 hover:border-blue-500 transition-colors cursor-pointer">
                     </a>
                 `;
                 contentElement.appendChild(div);

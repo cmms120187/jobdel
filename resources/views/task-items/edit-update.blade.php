@@ -79,7 +79,9 @@
                                     <div class="mt-2 grid grid-cols-4 gap-2">
                                         @foreach($update->attachments as $index => $attachment)
                                             <div class="relative">
-                                                <img src="{{ Storage::url($attachment) }}" alt="Foto {{ $index + 1 }}" class="w-full h-24 object-cover rounded border border-gray-300">
+                                                <a href="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $index]) }}" target="_blank">
+                                                    <img src="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $index]) }}" alt="Foto {{ $index + 1 }}" class="w-full h-24 object-cover rounded border border-gray-300">
+                                                </a>
                                             </div>
                                         @endforeach
                                     </div>

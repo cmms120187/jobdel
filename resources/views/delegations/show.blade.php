@@ -236,12 +236,12 @@
                                                         <div class="mt-3">
                                                             <p class="text-sm font-semibold text-gray-700 mb-2">Photo Bukti:</p>
                                                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                                @foreach($update->attachments as $attachment)
+                                                                @foreach($update->attachments as $i => $attachment)
                                                                     <div class="relative group">
-                                                                        <a href="{{ Storage::url($attachment) }}" target="_blank" class="block">
-                                                                            <img src="{{ Storage::url($attachment) }}" alt="Bukti progress" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all cursor-pointer">
+                                                                        <a href="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" target="_blank" class="block">
+                                                                            <img src="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" alt="Bukti progress" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all cursor-pointer">
                                                                         </a>
-                                                                        <a href="{{ Storage::url($attachment) }}" target="_blank" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg">
+                                                                        <a href="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" target="_blank" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg">
                                                                             <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
                                                                             </svg>

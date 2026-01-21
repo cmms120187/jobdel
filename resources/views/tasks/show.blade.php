@@ -19,9 +19,9 @@
                     </button>
                 </form>
                 @can('update', $task)
-                    <a href="{{ route('tasks.edit', $task) }}" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
-                        Edit
-                    </a>
+                <a href="{{ route('tasks.edit', $task) }}" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
+                    Edit
+                </a>
                 @endcan
                 <a href="{{ route('tasks.index', ['page' => session('tasks_page', 1)]) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm">
                     Kembali
@@ -139,26 +139,165 @@
                                 </div>
                             </div>
 
-                            <!-- File Support -->
+                            <!-- Attachments Section -->
+                            <div class="mt-4 pt-4 border-t" x-data="{ showUploadForm: false }">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-700 text-sm sm:text-base">Dokumen & Lampiran:</h3>
+                                    @php
+                                        $canUpload = ($task->created_by === Auth::id()) || 
+                                                    $task->delegations()->where('delegated_to', Auth::id())->exists() ||
+                                                    ($task->requested_by === Auth::id()) ||
+                                                    (Auth::user()->position && Auth::user()->position->name === 'Superuser');
+                                    @endphp
+                                    @if($canUpload)
+                                        <button @click="showUploadForm = !showUploadForm" type="button" class="text-xs sm:text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg inline-flex items-center transition-colors">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            <span x-show="!showUploadForm">Tambah File</span>
+                                            <span x-show="showUploadForm">Tutup</span>
+                                        </button>
+                                    @endif
+                                </div>
+
+                                <!-- Upload Form -->
+                                @if($canUpload)
+                                    <div x-show="showUploadForm" x-transition class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <form action="{{ route('tasks.upload-attachment', $task) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                            @csrf
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih File (Maks. 10MB per file)</label>
+                                                <input type="file" name="files[]" multiple accept="*/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                                                @error('files.*')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan (Opsional)</label>
+                                                <textarea name="description" rows="2" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Tambahkan keterangan tentang file ini..."></textarea>
+                                            </div>
+                                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                                Upload File
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+
+                                <!-- Attachments List -->
+                                @if($task->attachments && $task->attachments->count() > 0)
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                        @foreach($task->attachments as $attachment)
+                                            @php
+                                                $canDelete = ($attachment->uploaded_by === Auth::id()) || 
+                                                            ($task->created_by === Auth::id()) ||
+                                                            ($task->requested_by === Auth::id()) ||
+                                                            (Auth::user()->position && Auth::user()->position->name === 'Superuser');
+                                            @endphp
+                                            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                                <!-- File Icon/Preview -->
+                                                <div class="mb-3">
+                                                    @if($attachment->is_image)
+                                                        <a href="{{ route('tasks.preview-file', ['task' => $task->id, 'fileKey' => $attachment->id]) }}" target="_blank" class="block">
+                                                            <img src="{{ route('tasks.preview-file', ['task' => $task->id, 'fileKey' => $attachment->id]) }}" alt="{{ $attachment->original_name }}" class="w-full h-32 object-cover rounded border border-gray-200 hover:border-blue-500 transition-colors">
+                                                        </a>
+                                                    @elseif(str_contains($attachment->file_type, 'pdf'))
+                                                        <a href="{{ route('tasks.preview-file', ['task' => $task->id, 'fileKey' => $attachment->id]) }}" target="_blank" class="block bg-red-50 border-2 border-red-200 rounded p-8 text-center hover:border-red-400 transition-colors">
+                                                            <svg class="w-16 h-16 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                                            </svg>
+                                                            <p class="text-xs text-red-600 mt-2 font-semibold">PDF</p>
+                                                        </a>
+                                                    @else
+                                                        <div class="bg-gray-50 border-2 border-gray-200 rounded p-8 text-center">
+                                                            <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                            </svg>
+                                                            <p class="text-xs text-gray-500 mt-2 font-semibold uppercase">{{ $attachment->extension }}</p>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <!-- File Info -->
+                                                <div class="mb-3">
+                                                    <h4 class="text-sm font-semibold text-gray-800 truncate" title="{{ $attachment->original_name }}">
+                                                        {{ $attachment->original_name }}
+                                                    </h4>
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        {{ $attachment->formatted_size }}
+                                                    </p>
+                                                    @if($attachment->description)
+                                                        <p class="text-xs text-gray-600 mt-1 italic">{{ $attachment->description }}</p>
+                                                    @endif
+                                                    <p class="text-xs text-gray-400 mt-1">
+                                                        Diupload oleh: {{ $attachment->uploader->name }}<br>
+                                                        {{ $attachment->created_at->format('d M Y, H:i') }}
+                                                    </p>
+                                                </div>
+
+                                                <!-- Actions -->
+                                                <div class="flex gap-2">
+                                                    <a href="{{ route('tasks.download-file', ['task' => $task->id, 'fileKey' => $attachment->id]) }}" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-2 px-3 rounded text-center transition-colors">
+                                                        Download
+                                                    </a>
+                                                    @if($attachment->can_preview)
+                                                        <a href="{{ route('tasks.preview-file', ['task' => $task->id, 'fileKey' => $attachment->id]) }}" target="_blank" class="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-2 px-3 rounded transition-colors" title="Preview">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
+                                                    @if($canDelete)
+                                                        <form action="{{ route('tasks.delete-attachment', ['task' => $task->id, 'attachment' => $attachment->id]) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus file ini?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold py-2 px-3 rounded transition-colors" title="Hapus">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                <!-- Legacy File Support (for backward compatibility) -->
                             @if($task->file_support_1 || $task->file_support_2)
-                                <div class="mt-4 pt-4 border-t">
-                                    <h3 class="font-semibold text-gray-700 mb-2">File Support:</h3>
+                                    <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                                        <p class="text-xs text-yellow-700 font-semibold mb-2">Dokumen Lama (Legacy):</p>
                                     <div class="space-y-2">
                                         @if($task->file_support_1)
-                                            <div>
-                                                <span class="font-semibold text-gray-700">File Support 1:</span>
-                                                <a href="{{ Storage::url($task->file_support_1) }}" target="_blank" class="text-blue-600 hover:text-blue-800 ml-2">Download</a>
+                                                <div class="flex items-center justify-between text-sm bg-white p-2 rounded">
+                                                    <span class="text-gray-700">File Support 1</span>
+                                                    <a href="{{ route('tasks.download-file', ['task' => $task->id, 'fileKey' => 'file_support_1']) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold text-xs">
+                                                        Download
+                                                    </a>
                                             </div>
                                         @endif
                                         @if($task->file_support_2)
-                                            <div>
-                                                <span class="font-semibold text-gray-700">File Support 2:</span>
-                                                <a href="{{ Storage::url($task->file_support_2) }}" target="_blank" class="text-blue-600 hover:text-blue-800 ml-2">Download</a>
+                                                <div class="flex items-center justify-between text-sm bg-white p-2 rounded">
+                                                    <span class="text-gray-700">File Support 2</span>
+                                                    <a href="{{ route('tasks.download-file', ['task' => $task->id, 'fileKey' => 'file_support_2']) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold text-xs">
+                                                        Download
+                                                    </a>
                                             </div>
                                         @endif
                                     </div>
                                 </div>
-                            @endif
+                                @endif
+
+                                @if((!$task->attachments || $task->attachments->count() === 0) && !$task->file_support_1 && !$task->file_support_2)
+                                    <div class="text-center py-8 text-gray-400">
+                                        <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        <p class="text-sm">Belum ada file lampiran</p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -411,9 +550,9 @@
                                                                 <!-- Photo Attachments -->
                                                                 @if($update->attachments && count($update->attachments) > 0)
                                                                     <div class="mt-2 flex flex-wrap gap-2">
-                                                                        @foreach($update->attachments as $attachment)
-                                                                            <a href="{{ Storage::url($attachment) }}" target="_blank" class="block">
-                                                                                <img src="{{ Storage::url($attachment) }}" alt="Bukti" class="w-16 h-16 object-cover rounded border border-gray-200 hover:border-blue-500 transition-colors cursor-pointer">
+                                                                        @foreach($update->attachments as $i => $attachment)
+                                                                            <a href="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" target="_blank" class="block">
+                                                                                <img src="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" alt="Bukti" class="w-16 h-16 object-cover rounded border border-gray-200 hover:border-blue-500 transition-colors cursor-pointer">
                                                                             </a>
                                                                         @endforeach
                                                                     </div>
@@ -506,11 +645,13 @@
                                                                 @endif
                                                                 @if($update->attachments && count($update->attachments) > 0)
                                                                     <div class="mt-2 flex gap-2">
-                                                                        @foreach(array_slice($update->attachments, 0, 3) as $attachment)
-                                                                            <a href="{{ Storage::url($attachment) }}" target="_blank" class="block">
-                                                                                <img src="{{ Storage::url($attachment) }}" alt="Bukti" class="w-12 h-12 object-cover rounded border border-gray-200 hover:border-blue-500 transition-colors">
+                                                                        @php $maxThumb = min(3, count($update->attachments)); @endphp
+                                                                        @for($i = 0; $i < $maxThumb; $i++)
+                                                                            @php $attachment = $update->attachments[$i]; @endphp
+                                                                            <a href="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" target="_blank" class="block">
+                                                                                <img src="{{ route('progress.download-file', ['progressUpdate' => $update->id, 'index' => $i]) }}" alt="Bukti" class="w-12 h-12 object-cover rounded border border-gray-200 hover:border-blue-500 transition-colors">
                                                                             </a>
-                                                                        @endforeach
+                                                                        @endfor
                                                                         @if(count($update->attachments) > 3)
                                                                             <div class="w-12 h-12 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
                                                                                 <span class="text-xs text-gray-600">+{{ count($update->attachments) - 3 }}</span>
@@ -686,14 +827,14 @@
                                     </button>
                                 </form>
                                 @can('create', [App\Models\Delegation::class, $task])
-                                    <a href="{{ route('delegations.create', $task) }}" class="block w-full bg-blue-500 hover:bg-blue-700 text-white text-center font-bold py-2 px-4 rounded">
-                                        Delegasikan Task
-                                    </a>
+                                <a href="{{ route('delegations.create', $task) }}" class="block w-full bg-blue-500 hover:bg-blue-700 text-white text-center font-bold py-2 px-4 rounded">
+                                    Delegasikan Task
+                                </a>
                                 @endcan
                                 @can('update', $task)
-                                    <a href="{{ route('tasks.edit', $task) }}" class="block w-full bg-indigo-500 hover:bg-indigo-700 text-white text-center font-bold py-2 px-4 rounded">
-                                        Edit Task
-                                    </a>
+                                <a href="{{ route('tasks.edit', $task) }}" class="block w-full bg-indigo-500 hover:bg-indigo-700 text-white text-center font-bold py-2 px-4 rounded">
+                                    Edit Task
+                                </a>
                                 @endcan
                                 @can('delete', $task)
                                     <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus task ini?');">

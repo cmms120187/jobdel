@@ -61,6 +61,11 @@ class Task extends Model
         return $this->hasMany(TaskItem::class)->orderBy('order')->orderBy('id');
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TaskAttachment::class)->latest();
+    }
+
     /**
      * Get overall progress percentage based on task items
      */

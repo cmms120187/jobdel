@@ -24,6 +24,28 @@ class Delegation extends Model
         'completed_at' => 'datetime',
     ];
 
+    /**
+     * Get accepted_at in Asia/Jakarta timezone
+     */
+    public function getAcceptedAtJakartaAttribute()
+    {
+        if (!$this->accepted_at) {
+            return null;
+        }
+        return $this->accepted_at->setTimezone('Asia/Jakarta');
+    }
+
+    /**
+     * Get completed_at in Asia/Jakarta timezone
+     */
+    public function getCompletedAtJakartaAttribute()
+    {
+        if (!$this->completed_at) {
+            return null;
+        }
+        return $this->completed_at->setTimezone('Asia/Jakarta');
+    }
+
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);

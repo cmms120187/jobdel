@@ -127,28 +127,64 @@
                             <x-input-error :messages="$errors->get('due_date')" class="mt-2" />
                         </div>
 
-                        <!-- File Support 1 -->
+                        <!-- Attachments -->
                         <div class="mb-4">
-                            <x-input-label for="file_support_1" :value="__('File Support 1')" />
-                            @if($task->file_support_1)
-                                <p class="text-sm text-gray-600 mb-2">
-                                    File saat ini: <a href="{{ Storage::url($task->file_support_1) }}" target="_blank" class="text-blue-600 hover:text-blue-800">Download</a>
-                                </p>
+                            <x-input-label for="attachments" :value="__('Dokumen Pendukung (Bisa upload multiple files)')" />
+                            
+                            <!-- Existing Attachments -->
+                            @if($task->attachments && $task->attachments->count() > 0)
+                                <div class="mb-3 p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-sm font-semibold text-gray-700 mb-2">Dokumen yang sudah diupload:</p>
+                                    <ul class="space-y-2">
+                                        @foreach($task->attachments as $attachment)
+                                            <li class="flex items-center justify-between text-sm">
+                                                <span class="text-gray-600">
+                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                    </svg>
+                                                    {{ $attachment->original_name }}
+                                                    <span class="text-xs text-gray-500">({{ $attachment->formatted_size }})</span>
+                                                </span>
+                                                <a href="{{ route('tasks.download-file', ['task' => $task->id, 'fileKey' => $attachment->id]) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold">
+                                                    Download
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             @endif
-                            <x-text-input id="file_support_1" class="block mt-1 w-full" type="file" name="file_support_1" />
-                            <x-input-error :messages="$errors->get('file_support_1')" class="mt-2" />
-                        </div>
-
-                        <!-- File Support 2 -->
-                        <div class="mb-4">
-                            <x-input-label for="file_support_2" :value="__('File Support 2')" />
-                            @if($task->file_support_2)
-                                <p class="text-sm text-gray-600 mb-2">
-                                    File saat ini: <a href="{{ Storage::url($task->file_support_2) }}" target="_blank" class="text-blue-600 hover:text-blue-800">Download</a>
-                                </p>
+                            
+                            <!-- Legacy file_support_1 and file_support_2 (for backward compatibility) -->
+                            @if($task->file_support_1 || $task->file_support_2)
+                                <div class="mb-3 p-3 bg-yellow-50 rounded-lg">
+                                    <p class="text-sm font-semibold text-yellow-700 mb-2">Dokumen lama (legacy):</p>
+                                    <ul class="space-y-2">
+                                        @if($task->file_support_1)
+                                            <li class="flex items-center justify-between text-sm">
+                                                <span class="text-gray-600">File Support 1</span>
+                                                <a href="{{ route('tasks.download-file', ['task' => $task->id, 'fileKey' => 'file_support_1']) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold">
+                                                    Download
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if($task->file_support_2)
+                                            <li class="flex items-center justify-between text-sm">
+                                                <span class="text-gray-600">File Support 2</span>
+                                                <a href="{{ route('tasks.download-file', ['task' => $task->id, 'fileKey' => 'file_support_2']) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold">
+                                                    Download
+                                                </a>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </div>
                             @endif
-                            <x-text-input id="file_support_2" class="block mt-1 w-full" type="file" name="file_support_2" />
-                            <x-input-error :messages="$errors->get('file_support_2')" class="mt-2" />
+                            
+                            <x-text-input id="attachments" class="block mt-1 w-full" type="file" name="attachments[]" multiple />
+                            <x-input-error :messages="$errors->get('attachments')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('attachments.*')" class="mt-2" />
+                            <p class="mt-1 text-xs text-gray-500">
+                                Anda dapat mengupload berbagai jenis dokumen (PDF, Word, Excel, Image, dll). Maksimal 50MB per file.
+                            </p>
                         </div>
 
                         <!-- Approve Level -->
