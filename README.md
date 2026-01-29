@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# jobdel
-=======
 # Aplikasi Job Delegation
 
 Aplikasi untuk membuat dan memantau delegasi pekerjaan (job delegation) dengan fitur tracking progress, dibuat menggunakan Laravel dan Breeze.
@@ -163,4 +160,3 @@ Aplikasi untuk membuat dan memantau delegasi pekerjaan (job delegation) dengan f
 ## Lisensi
 
 Aplikasi ini dibuat untuk keperluan training dan pembelajaran.
->>>>>>> 975bb47 (awal)

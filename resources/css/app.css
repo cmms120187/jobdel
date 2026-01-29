@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Responsive base: better readability on small screens */
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+    /* Slightly larger base on small screens for readability without zoom */
+    @media (max-width: 640px) {
+        html {
+            font-size: 16px;
+        }
+    }
+    @media (max-width: 375px) {
+        html {
+            font-size: 15px;
+        }
+    }
+}
+
 @layer components {
     /* Custom Gradient Backgrounds */
     .gradient-primary {
@@ -143,5 +162,35 @@
 @layer utilities {
     .scale-102 {
         transform: scale(1.02);
+    }
+}
+
+/* Touch-friendly: minimum 44px tap targets on mobile/tablet */
+@media (max-width: 1024px) {
+    .touch-target {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* Prevent horizontal overflow on small screens */
+    body {
+        overflow-x: hidden;
+    }
+}
+
+/* Safe area for notched devices (e.g. iPhone) */
+@supports (padding: env(safe-area-inset-bottom)) {
+    main {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Subtle tap highlight for better touch feedback */
+@media (hover: none) and (pointer: coarse) {
+    a, button {
+        -webkit-tap-highlight-color: rgba(124, 58, 237, 0.15);
+        tap-highlight-color: rgba(124, 58, 237, 0.15);
     }
 }

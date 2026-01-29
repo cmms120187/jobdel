@@ -74,6 +74,7 @@
                             <a href="{{ route('reports.timeline') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg">Timeline</a>
                             @if(Auth::user()->subordinates()->exists())
                             <a href="{{ route('leader.reports.overview') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Team Report</a>
+                            <a href="{{ route('leader.reports.user-reports') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Laporan Per User</a>
                             <a href="{{ route('leader.reports.work-time') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Work Time Report</a>
                             <a href="{{ route('leader.reports.work-time-history') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg">Efektivitas Waktu Kerja</a>
                             @endif
@@ -126,7 +127,7 @@
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-purple-200 hover:bg-white/20 focus:outline-none focus:bg-white/20 focus:text-purple-200 transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-lg text-white hover:text-purple-200 hover:bg-white/20 focus:outline-none focus:bg-white/20 focus:text-purple-200 transition duration-150 ease-in-out touch-target" aria-label="Toggle menu">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -137,45 +138,46 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white/95 backdrop-blur-sm shadow-lg">
-        <div class="pt-2 pb-3 space-y-1 px-2">
-            <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-base font-medium {{ request()->routeIs('dashboard') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : 'text-gray-700 hover:bg-gray-50' }}">Dashboard</a>
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white/95 backdrop-blur-sm shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div class="pt-2 pb-3 space-y-0 px-2">
+            <a href="{{ route('dashboard') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium rounded-lg {{ request()->routeIs('dashboard') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : 'text-gray-700 hover:bg-gray-50' }}">Dashboard</a>
 
-            <div x-data="{ openTasks: false }" class="border-t border-gray-200 pt-2">
-                <button @click="openTasks = !openTasks" class="w-full text-left px-4 py-2 text-base font-medium text-gray-700">Tasks & Delegations</button>
-                <div x-show="openTasks" class="pl-4">
-                    <a href="{{ route('tasks.index') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Tasks</a>
-                    <a href="{{ route('delegations.index') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Delegations</a>
+            <div x-data="{ openTasks: false }" class="border-t border-gray-200 pt-1">
+                <button @click="openTasks = !openTasks" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Tasks & Delegations</button>
+                <div x-show="openTasks" class="pl-2">
+                    <a href="{{ route('tasks.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Tasks</a>
+                    <a href="{{ route('delegations.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Delegations</a>
                 </div>
             </div>
 
-            <div x-data="{ openResources: false }" class="border-t border-gray-200 pt-2">
-                <button @click="openResources = !openResources" class="w-full text-left px-4 py-2 text-base font-medium text-gray-700">Resources</button>
-                <div x-show="openResources" class="pl-4">
-                    <a href="{{ route('rooms.index') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Rooms</a>
+            <div x-data="{ openResources: false }" class="border-t border-gray-200 pt-1">
+                <button @click="openResources = !openResources" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Resources</button>
+                <div x-show="openResources" class="pl-2">
+                    <a href="{{ route('rooms.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Rooms</a>
                     @if(Auth::user()->position && Auth::user()->position->name === 'Superuser')
-                        <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">User</a>
+                        <a href="{{ route('admin.users.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">User</a>
                     @endif
                 </div>
             </div>
 
-            <div x-data="{ openReports: false }" class="border-t border-gray-200 pt-2">
-                <button @click="openReports = !openReports" class="w-full text-left px-4 py-2 text-base font-medium text-gray-700">Reports</button>
-                <div x-show="openReports" class="pl-4">
-                    <a href="{{ route('reports.timeline') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Timeline</a>
+            <div x-data="{ openReports: false }" class="border-t border-gray-200 pt-1">
+                <button @click="openReports = !openReports" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Reports</button>
+                <div x-show="openReports" class="pl-2">
+                    <a href="{{ route('reports.timeline') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Timeline</a>
                     @if(Auth::user()->subordinates()->exists())
-                    <a href="{{ route('leader.reports.overview') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Team Report</a>
-                    <a href="{{ route('leader.reports.work-time') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Work Time Report</a>
-                    <a href="{{ route('leader.reports.work-time-history') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Efektivitas Waktu Kerja</a>
+                    <a href="{{ route('leader.reports.overview') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Team Report</a>
+                    <a href="{{ route('leader.reports.user-reports') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Laporan Per User</a>
+                    <a href="{{ route('leader.reports.work-time') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Work Time Report</a>
+                    <a href="{{ route('leader.reports.work-time-history') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Efektivitas Waktu Kerja</a>
                     @endif
                 </div>
             </div>
 
             @if(Auth::user()->position && Auth::user()->position->name !== 'Superuser')
-            <div x-data="{ openSubordinates: false }" class="border-t border-gray-200 pt-2">
-                <button @click="openSubordinates = !openSubordinates" class="w-full text-left px-4 py-2 text-base font-medium text-gray-700">Subordinates</button>
-                <div x-show="openSubordinates" class="pl-4">
-                    <a href="{{ route('leader.subordinates.index') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Subordinates</a>
+            <div x-data="{ openSubordinates: false }" class="border-t border-gray-200 pt-1">
+                <button @click="openSubordinates = !openSubordinates" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Subordinates</button>
+                <div x-show="openSubordinates" class="pl-2">
+                    <a href="{{ route('leader.subordinates.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Subordinates</a>
                 </div>
             </div>
             @endif
@@ -195,21 +197,17 @@
                 </div>
             </div>
 
-            <div class="mt-3 space-y-1">
-                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">
+            <div class="mt-3 space-y-0">
+                <a href="{{ route('profile.edit') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                     Profile
                 </a>
 
                 <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" class="block">
                     @csrf
-
-                    <a href="{{ route('logout') }}"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();"
-                            class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">
+                    <button type="submit" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg touch-target">
                         Log Out
-                    </a>
+                    </button>
                 </form>
             </div>
         </div>

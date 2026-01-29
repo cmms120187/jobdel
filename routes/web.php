@@ -75,6 +75,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/leader/reports/tasks', [LeaderReportController::class, 'tasks'])->name('leader.reports.tasks');
     Route::get('/leader/reports/work-time', [LeaderReportController::class, 'workTimeReport'])->name('leader.reports.work-time');
     Route::get('/leader/reports/work-time-history', [LeaderReportController::class, 'workTimeHistory'])->name('leader.reports.work-time-history');
+    Route::get('/leader/reports/user-reports', [LeaderReportController::class, 'userReports'])->name('leader.reports.user-reports');
+    Route::get('/leader/reports/user/{userId}', [LeaderReportController::class, 'userDetail'])->name('leader.reports.user-detail');
     Route::get('/leader/reports/export', [LeaderReportController::class, 'export'])->name('leader.reports.export');
     
     // Profile routes

@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-base sm:text-xl text-gray-800 leading-tight break-words">
                 {{ __('Laporan Project Management - Timeline') }}
             </h2>
         </div>
     </x-slot>
 
     <div class="py-4 sm:py-12">
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto px-3 sm:px-6 lg:px-8">
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -17,9 +17,9 @@
 
             <!-- Filter Toggle Button -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-4">
-                    <button type="button" onclick="toggleFilter()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm inline-flex items-center">
-                        <svg id="filterIcon" class="w-4 h-4 mr-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-3 sm:p-4">
+                    <button type="button" onclick="toggleFilter()" class="touch-target min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded text-sm inline-flex items-center">
+                        <svg id="filterIcon" class="w-4 h-4 mr-2 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                         Filter
@@ -29,7 +29,7 @@
 
             <!-- Filter Section (Hidden by default) -->
             <div id="filterSection" class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 hidden">
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <form method="GET" action="{{ route('reports.timeline') }}" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                             @if(isset($filterUsers) && $filterUsers->count() > 0)

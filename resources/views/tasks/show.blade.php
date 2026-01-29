@@ -4,26 +4,26 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight break-words">
                 {{ __('Detail Task') }}
             </h2>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route('tasks.duplicate', $task) }}" class="inline">
                     @csrf
-                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm inline-flex items-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="submit" class="touch-target min-h-[44px] bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-3 sm:px-4 rounded text-xs sm:text-sm inline-flex items-center">
+                        <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                         Duplikat
                     </button>
                 </form>
                 @can('update', $task)
-                <a href="{{ route('tasks.edit', $task) }}" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
+                <a href="{{ route('tasks.edit', $task) }}" class="touch-target min-h-[44px] bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-3 sm:px-4 rounded text-xs sm:text-sm inline-flex items-center">
                     Edit
                 </a>
                 @endcan
-                <a href="{{ route('tasks.index', ['page' => session('tasks_page', 1)]) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm">
+                <a href="{{ route('tasks.index', ['page' => session('tasks_page', 1)]) }}" class="touch-target min-h-[44px] bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-3 sm:px-4 rounded text-xs sm:text-sm inline-flex items-center">
                     Kembali
                 </a>
             </div>
@@ -31,7 +31,7 @@
     </x-slot>
 
     <div class="py-4 sm:py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             @if (session('success'))
                 <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -368,21 +368,21 @@
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                                                <input type="date" name="start_date" id="start_date" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base">
+                                                <input type="date" name="start_date" id="start_date" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base">
                                             </div>
                                             <div>
                                                 <label for="start_time" class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                                                <input type="time" name="start_time" id="start_time" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base">
+                                                <input type="time" name="start_time" id="start_time" value="{{ \Carbon\Carbon::now()->format('H:i') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base">
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
-                                                <input type="date" name="due_date" id="due_date" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base">
+                                                <input type="date" name="due_date" id="due_date" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base">
                                             </div>
                                             <div>
                                                 <label for="due_time" class="block text-sm font-medium text-gray-700 mb-1">Due Time *</label>
-                                                <input type="time" name="due_time" id="due_time" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base" required>
+                                                <input type="time" name="due_time" id="due_time" value="{{ \Carbon\Carbon::now()->format('H:i') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm sm:text-base" required>
                                                 <p class="text-xs text-gray-500 mt-1">Waktu batas akhir untuk reminder</p>
                                             </div>
                                         </div>
@@ -453,12 +453,12 @@
                                                     @endif
                                                     @if($canUpdateProgress)
                                                         @if($item->progress_percentage < 100)
-                                                            <button onclick="openProgressModal({{ $item->id }}, {{ $item->progress_percentage }}, '{{ $item->title }}')" class="bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded flex-1 sm:flex-none">
+                                                            <button onclick="openProgressModal({{ $item->id }}, {{ $item->progress_percentage }}, '{{ addslashes($item->title) }}', {{ $item->start_time ? "'" . $item->start_time . "'" : 'null' }}, {{ $item->due_time ? "'" . $item->due_time . "'" : 'null' }})" class="bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded flex-1 sm:flex-none">
                                                                 <span class="hidden sm:inline">Update Progress</span>
                                                                 <span class="sm:hidden">Update</span>
                                                             </button>
                                                         @else
-                                                            <button onclick="openProgressModal({{ $item->id }}, {{ $item->progress_percentage }}, '{{ $item->title }}')" class="bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded flex-1 sm:flex-none" title="Progress sudah 100%. Bisa tambah catatan/foto">
+                                                            <button onclick="openProgressModal({{ $item->id }}, {{ $item->progress_percentage }}, '{{ addslashes($item->title) }}', {{ $item->start_time ? "'" . $item->start_time . "'" : 'null' }}, {{ $item->due_time ? "'" . $item->due_time . "'" : 'null' }})" class="bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded flex-1 sm:flex-none" title="Progress sudah 100%. Bisa tambah catatan/foto">
                                                                 <span class="hidden sm:inline">Tambah Catatan/Foto</span>
                                                                 <span class="sm:hidden">Catatan</span>
                                                             </button>
@@ -619,6 +619,43 @@
                                                     {{ ucfirst($delegation->status) }}
                                                 </span>
                                             </div>
+                                            
+                                            <!-- Waktu Mulai dan Selesai -->
+                                            <div class="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                                                @if($delegation->accepted_at)
+                                                    <div class="bg-green-50 border border-green-200 rounded-lg p-2">
+                                                        <span class="font-semibold text-green-700 block mb-1">Mulai Kerja:</span>
+                                                        <p class="text-green-800">
+                                                            {{ \Carbon\Carbon::parse($delegation->accepted_at)->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('d M Y, H:i') }} WIB
+                                                        </p>
+                                                    </div>
+                                                @else
+                                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-2">
+                                                        <span class="font-semibold text-gray-700 block mb-1">Mulai Kerja:</span>
+                                                        <p class="text-gray-500">Belum diterima</p>
+                                                    </div>
+                                                @endif
+                                                
+                                                @if($delegation->completed_at)
+                                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                                                        <span class="font-semibold text-blue-700 block mb-1">Selesai Kerja:</span>
+                                                        <p class="text-blue-800">
+                                                            {{ \Carbon\Carbon::parse($delegation->completed_at)->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('d M Y, H:i') }} WIB
+                                                        </p>
+                                                    </div>
+                                                @elseif($delegation->accepted_at)
+                                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                                                        <span class="font-semibold text-yellow-700 block mb-1">Selesai Kerja:</span>
+                                                        <p class="text-yellow-600">Masih berjalan</p>
+                                                    </div>
+                                                @else
+                                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-2">
+                                                        <span class="font-semibold text-gray-700 block mb-1">Selesai Kerja:</span>
+                                                        <p class="text-gray-500">-</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            
                                             <div class="mb-3">
                                                 <div class="w-full bg-gray-200 rounded-full h-2.5">
                                                     <div class="bg-blue-600 h-2.5 rounded-full transition-all" style="width: {{ $delegation->progress_percentage }}%"></div>
@@ -936,7 +973,7 @@
     <script>
         let selectedPhotos = [];
 
-        function openProgressModal(itemId, currentProgress, itemTitle) {
+        function openProgressModal(itemId, currentProgress, itemTitle, startTime, dueTime) {
             const modal = document.getElementById('progressModal');
             const form = document.getElementById('progressForm');
             const progressInput = document.getElementById('progress_percentage');
@@ -952,6 +989,18 @@
             // Set default tanggal hari ini
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('update_date').value = today;
+            // Set default waktu mulai dari start_time task item, jika ada
+            if (startTime) {
+                document.getElementById('time_from').value = startTime;
+            } else {
+                document.getElementById('time_from').value = '';
+            }
+            // Set default waktu selesai dari due_time task item, jika ada
+            if (dueTime) {
+                document.getElementById('time_to').value = dueTime;
+            } else {
+                document.getElementById('time_to').value = '';
+            }
             document.getElementById('photo-input').value = '';
             document.getElementById('camera-input').value = '';
             photoPreview.innerHTML = '';

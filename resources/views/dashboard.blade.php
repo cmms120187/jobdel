@@ -16,7 +16,7 @@
     </x-slot>
 
     <div class="py-4 sm:py-8 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             @if (session('success'))
                 <div class="mb-6 fade-in bg-gradient-to-r from-green-400 to-green-600 text-white px-6 py-4 rounded-xl shadow-lg flex items-center">
                     <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,68 +27,68 @@
             @endif
 
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
                 <!-- Total Tasks -->
                 <div class="stat-card fade-in">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="stat-card-icon gradient-blue">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-4 sm:p-6">
+                        <div class="flex items-center justify-between mb-2 sm:mb-4">
+                            <div class="stat-card-icon gradient-blue w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                 </svg>
                             </div>
-                            <span class="text-3xl font-bold text-gray-800">{{ $stats['total_tasks'] }}</span>
+                            <span class="text-2xl sm:text-3xl font-bold text-gray-800">{{ $stats['total_tasks'] }}</span>
                         </div>
-                        <div class="text-sm font-medium text-gray-600">Total Tasks</div>
-                        <div class="mt-2 text-xs text-gray-500">Semua pekerjaan</div>
+                        <div class="text-xs sm:text-sm font-medium text-gray-600">Total Tasks</div>
+                        <div class="mt-1 sm:mt-2 text-xs text-gray-500">Semua pekerjaan</div>
                     </div>
                 </div>
 
                 <!-- Pending Tasks -->
                 <div class="stat-card fade-in">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="stat-card-icon gradient-warning">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-4 sm:p-6">
+                        <div class="flex items-center justify-between mb-2 sm:mb-4">
+                            <div class="stat-card-icon gradient-warning w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <span class="text-3xl font-bold text-yellow-600">{{ $stats['pending_tasks'] }}</span>
+                            <span class="text-2xl sm:text-3xl font-bold text-yellow-600">{{ $stats['pending_tasks'] }}</span>
                         </div>
-                        <div class="text-sm font-medium text-gray-600">Pending Tasks</div>
-                        <div class="mt-2 text-xs text-gray-500">Menunggu tindakan</div>
+                        <div class="text-xs sm:text-sm font-medium text-gray-600">Pending Tasks</div>
+                        <div class="mt-1 sm:mt-2 text-xs text-gray-500">Menunggu tindakan</div>
                     </div>
                 </div>
 
                 <!-- In Progress -->
                 <div class="stat-card fade-in">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="stat-card-icon gradient-info">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-4 sm:p-6">
+                        <div class="flex items-center justify-between mb-2 sm:mb-4">
+                            <div class="stat-card-icon gradient-info w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>
                             </div>
-                            <span class="text-3xl font-bold text-blue-600">{{ $stats['in_progress_tasks'] }}</span>
+                            <span class="text-2xl sm:text-3xl font-bold text-blue-600">{{ $stats['in_progress_tasks'] }}</span>
                         </div>
-                        <div class="text-sm font-medium text-gray-600">In Progress</div>
-                        <div class="mt-2 text-xs text-gray-500">Sedang dikerjakan</div>
+                        <div class="text-xs sm:text-sm font-medium text-gray-600">In Progress</div>
+                        <div class="mt-1 sm:mt-2 text-xs text-gray-500">Sedang dikerjakan</div>
                     </div>
                 </div>
 
                 <!-- Completed -->
                 <div class="stat-card fade-in">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="stat-card-icon gradient-success">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-4 sm:p-6">
+                        <div class="flex items-center justify-between mb-2 sm:mb-4">
+                            <div class="stat-card-icon gradient-success w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <span class="text-3xl font-bold text-green-600">{{ $stats['completed_tasks'] }}</span>
+                            <span class="text-2xl sm:text-3xl font-bold text-green-600">{{ $stats['completed_tasks'] }}</span>
                         </div>
-                        <div class="text-sm font-medium text-gray-600">Completed</div>
-                        <div class="mt-2 text-xs text-gray-500">Selesai</div>
+                        <div class="text-xs sm:text-sm font-medium text-gray-600">Completed</div>
+                        <div class="mt-1 sm:mt-2 text-xs text-gray-500">Selesai</div>
                     </div>
                 </div>
             </div>
@@ -96,10 +96,10 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- My Tasks -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden fade-in">
-                    <div class="gradient-blue p-4">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-bold text-white flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="gradient-blue p-3 sm:p-4">
+                        <div class="flex flex-col xs:flex-row justify-between items-stretch sm:items-center gap-2">
+                            <h3 class="text-base sm:text-lg font-bold text-white flex items-center">
+                                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                 </svg>
                                 @if(isset($isSuperuser) && $isSuperuser)
@@ -108,19 +108,19 @@
                                     Tasks Saya
                                 @endif
                             </h3>
-                            <a href="{{ route('tasks.create') }}" class="bg-white text-blue-600 font-bold py-2 px-4 rounded-lg text-sm hover:bg-blue-50 transform hover:scale-105 transition-all duration-200 shadow-md">
+                            <a href="{{ route('tasks.create') }}" class="touch-target bg-white text-blue-600 font-bold py-3 px-4 rounded-lg text-sm hover:bg-blue-50 transition-all duration-200 shadow-md text-center min-h-[44px]">
                                 + Buat Task
                             </a>
                         </div>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         @if($myTasks->count() > 0)
                             <div class="space-y-3">
                                 @foreach($myTasks->take(5) as $task)
-                                    <a href="{{ route('tasks.show', $task) }}" class="block task-card {{ $task->status === 'completed' ? 'task-card-completed' : ($task->status === 'in_progress' ? 'task-card-progress' : 'task-card-pending') }}">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <h4 class="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                                    <a href="{{ route('tasks.show', $task) }}" class="block task-card p-4 sm:p-4 touch-target min-h-[44px] {{ $task->status === 'completed' ? 'task-card-completed' : ($task->status === 'in_progress' ? 'task-card-progress' : 'task-card-pending') }}">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="font-semibold text-sm sm:text-base text-gray-900 mb-2 hover:text-blue-600 transition-colors break-words">
                                                     {{ $task->title }}
                                                 </h4>
                                                 <div class="flex items-center gap-2 flex-wrap">
@@ -145,7 +145,7 @@
                                 @endforeach
                             </div>
                             <div class="mt-6 text-center">
-                                <a href="{{ route('tasks.index') }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm inline-flex items-center">
+                                <a href="{{ route('tasks.index') }}" class="touch-target min-h-[44px] text-blue-600 hover:text-blue-800 font-semibold text-sm inline-flex items-center justify-center px-4 py-2 rounded-lg">
                                     Lihat semua tasks
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -180,11 +180,11 @@
                             @endif
                         </h3>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         @if($delegatedToMe->count() > 0)
                             <div class="space-y-3">
                                 @foreach($delegatedToMe->take(5) as $delegation)
-                                    <a href="{{ route('delegations.show', $delegation) }}" class="block task-card task-card-progress">
+                                    <a href="{{ route('delegations.show', $delegation) }}" class="block task-card task-card-progress touch-target min-h-[44px] p-4 sm:p-4">
                                         <div class="flex items-start justify-between">
                                             <div class="flex-1">
                                                 <h4 class="font-semibold text-gray-900 mb-2 hover:text-green-600 transition-colors">
@@ -213,7 +213,7 @@
                                 @endforeach
                             </div>
                             <div class="mt-6 text-center">
-                                <a href="{{ route('delegations.index') }}" class="text-green-600 hover:text-green-800 font-semibold text-sm inline-flex items-center">
+                                <a href="{{ route('delegations.index') }}" class="touch-target min-h-[44px] text-green-600 hover:text-green-800 font-semibold text-sm inline-flex items-center justify-center px-4 py-2 rounded-lg">
                                     Lihat semua delegasi
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -250,17 +250,17 @@
                     <div class="p-4 sm:p-6">
                         <!-- Tutorial Tabs -->
                         <div class="mb-6">
-                            <div class="flex flex-wrap gap-2 border-b border-gray-200">
-                                <button onclick="showTutorial('create-task')" id="tab-create-task" class="tutorial-tab active px-4 py-2 text-sm font-medium text-gray-700 border-b-2 border-purple-600">
+                            <div class="flex flex-wrap gap-1 sm:gap-2 border-b border-gray-200 -mb-px">
+                                <button type="button" onclick="showTutorial('create-task')" id="tab-create-task" class="tutorial-tab active touch-target min-h-[44px] px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 border-b-2 border-purple-600 rounded-t-lg">
                                     📝 Membuat Task
                                 </button>
-                                <button onclick="showTutorial('detail-pekerjaan')" id="tab-detail-pekerjaan" class="tutorial-tab px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700">
+                                <button type="button" onclick="showTutorial('detail-pekerjaan')" id="tab-detail-pekerjaan" class="tutorial-tab touch-target min-h-[44px] px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 rounded-t-lg">
                                     📋 Detail Pekerjaan
                                 </button>
-                                <button onclick="showTutorial('update-progress')" id="tab-update-progress" class="tutorial-tab px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700">
+                                <button type="button" onclick="showTutorial('update-progress')" id="tab-update-progress" class="tutorial-tab touch-target min-h-[44px] px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 rounded-t-lg">
                                     📊 Update Progress
                                 </button>
-                                <button onclick="showTutorial('delegasi')" id="tab-delegasi" class="tutorial-tab px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700">
+                                <button type="button" onclick="showTutorial('delegasi')" id="tab-delegasi" class="tutorial-tab touch-target min-h-[44px] px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 rounded-t-lg">
                                     👥 Delegasi
                                 </button>
                             </div>

@@ -135,14 +135,10 @@ class User extends Authenticatable
     /**
      * Get users that are superiors (higher level positions)
      * Based on position hierarchy - users with level higher than current user
+     * Returns all users with higher position levels (not just direct leader)
      */
     public function getSuperiors()
     {
-        // If leader relation exists, return direct leader first
-        if ($this->leader) {
-            return collect([$this->leader->load('position')]);
-        }
-
         // Superuser has no superiors
         if ($this->position && $this->position->name === 'Superuser') {
             return collect([]);
@@ -155,7 +151,8 @@ class User extends Authenticatable
 
         $userLevel = $this->position->level;
 
-        // Fallback: Get users with position level higher than current user
+        // Get all users with position level higher than current user
+        // This includes all levels above (e.g., if Ast Manager, shows Manager, GM, etc.)
         return User::whereHas('position', function($query) use ($userLevel) {
                 $query->where('level', '>', $userLevel);
             })
