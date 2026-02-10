@@ -32,13 +32,22 @@
             @endisset
 
             <!-- Page Content -->
-            <main class="pt-16 pb-8 sm:pb-12 min-h-screen">
+            <main class="pt-16 pb-16 sm:pb-20 min-h-screen">
                 @hasSection('content')
                     @yield('content')
                 @else
                     {{ $slot ?? '' }}
                 @endif
             </main>
+
+            <!-- Fixed Footer -->
+            <footer class="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-lg border-t-4 border-purple-400">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                    <p class="text-center text-white text-sm font-medium">
+                        © {{ date('Y') }} Copyright by WamayStore @ <a href="https://tpmcmms.id" target="_blank" rel="noopener noreferrer" class="underline hover:text-purple-200 transition-colors">tpmcmms.id</a>
+                    </p>
+                </div>
+            </footer>
         </div>
     @stack('scripts')
     </body>

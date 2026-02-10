@@ -116,6 +116,10 @@ class DelegationController extends Controller
                     'status' => 'accepted',
                     'accepted_at' => now(),
                 ]);
+                // Sinkronkan status Task: jika masih pending, ubah ke in_progress
+                if ($delegation->task->status === 'pending') {
+                    $delegation->task->update(['status' => 'in_progress']);
+                }
                 return redirect()->back()->with('success', 'Delegasi diterima.');
             } elseif ($request->action === 'reject') {
                 $delegation->update([
@@ -139,6 +143,14 @@ class DelegationController extends Controller
         ]);
 
         $delegation->update($validated);
+
+        // Sinkronkan status Task dengan status delegasi
+        $task = $delegation->task;
+        if (in_array($validated['status'], ['accepted', 'in_progress']) && $task->status === 'pending') {
+            $task->update(['status' => 'in_progress']);
+        } elseif ($validated['status'] === 'completed' && $task->status !== 'completed') {
+            $task->update(['status' => 'completed']);
+        }
 
         // Get page from session for redirect
         $page = session('delegations_page', 1);

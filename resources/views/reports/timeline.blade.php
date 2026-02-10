@@ -31,7 +31,7 @@
             <div id="filterSection" class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 hidden">
                 <div class="p-4 sm:p-6">
                     <form method="GET" action="{{ route('reports.timeline') }}" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                             @if(isset($filterUsers) && $filterUsers->count() > 0)
                                 <div>
                                     <label for="user_id" class="block text-sm font-medium text-gray-700 mb-1">User</label>
@@ -83,6 +83,16 @@
                             <div>
                                 <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">Sampai Tanggal</label>
                                 <input type="date" name="date_to" id="date_to" value="{{ $dateTo }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+
+                            <div>
+                                <label for="group_by" class="block text-sm font-medium text-gray-700 mb-1">Tampilan Timeline</label>
+                                <select name="group_by" id="group_by" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="daily" {{ ($groupBy ?? 'daily') === 'daily' ? 'selected' : '' }}>Daily (pertanggal)</option>
+                                    <option value="weekly" {{ ($groupBy ?? '') === 'weekly' ? 'selected' : '' }}>Weekly (per minggu, W1 Jan, W2 Jan, dst)</option>
+                                    <option value="monthly" {{ ($groupBy ?? '') === 'monthly' ? 'selected' : '' }}>Monthly (per bulan, Jan, Feb, dst)</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Pilih tampilan agar timeline rapi untuk periode panjang</p>
                             </div>
                         </div>
 
@@ -161,16 +171,17 @@
                                         <th class="border border-gray-300 px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase" style="width: 120px; min-width: 120px;">Progress</th>
                                         <th class="border border-gray-300 px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase" style="width: 120px; min-width: 120px;">Dokumentasi</th>
                                         
-                                        <!-- Date Columns -->
-                                        @foreach($dateRange as $date)
+                                        <!-- Period Columns (Daily / Weekly / Monthly) -->
+                                        @foreach($dateRange as $period)
                                             @php
-                                                $dateObj = \Carbon\Carbon::parse($date);
-                                                $isWeekend = $dateObj->isWeekend();
-                                                $isToday = $dateObj->isToday();
+                                                $periodStart = $period['start'] instanceof \Carbon\Carbon ? $period['start'] : \Carbon\Carbon::parse($period['start']);
+                                                $periodEnd = $period['end'] instanceof \Carbon\Carbon ? $period['end'] : \Carbon\Carbon::parse($period['end']);
+                                                $isToday = \Carbon\Carbon::today()->between($periodStart, $periodEnd);
+                                                $isWeekend = ($periodStart->isWeekend() || $periodEnd->isWeekend()) && isset($period['key']) && strlen($period['key']) === 10;
                                             @endphp
-                                            <th class="border border-gray-300 px-1 py-3 text-center text-xs font-semibold text-gray-700 {{ $isToday ? 'bg-yellow-200' : ($isWeekend ? 'bg-gray-50' : 'bg-white') }}" style="width: 45px; min-width: 45px;">
-                                                <div class="font-semibold">{{ $dateObj->format('d') }}</div>
-                                                <div class="text-[10px] text-gray-500 mt-0.5">{{ $dateObj->format('M') }}</div>
+                                            <th class="border border-gray-300 px-1 py-3 text-center text-xs font-semibold text-gray-700 {{ $isToday ? 'bg-yellow-200' : ($isWeekend ? 'bg-gray-50' : 'bg-white') }}" style="width: {{ ($groupBy ?? 'daily') === 'daily' ? '45' : (($groupBy ?? '') === 'monthly' ? '70' : '55') }}px; min-width: {{ ($groupBy ?? 'daily') === 'daily' ? '45' : (($groupBy ?? '') === 'monthly' ? '70' : '55') }}px;">
+                                                <div class="font-semibold">{{ $period['label'] }}</div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5">{{ $period['sublabel'] }}</div>
                                             </th>
                                         @endforeach
                                     </tr>
@@ -227,25 +238,21 @@
                                                 @endif
                                             </td>
                                             
-                                            <!-- Timeline cells -->
-                                            @foreach($dateRange as $date)
+                                            <!-- Timeline cells (by period: daily / weekly / monthly) -->
+                                            @foreach($dateRange as $period)
                                                 @php
-                                                    $dateObj = \Carbon\Carbon::parse($date);
+                                                    $periodStart = $period['start'] instanceof \Carbon\Carbon ? $period['start']->copy() : \Carbon\Carbon::parse($period['start'])->copy();
+                                                    $periodEnd = $period['end'] instanceof \Carbon\Carbon ? $period['end']->copy() : \Carbon\Carbon::parse($period['end'])->copy();
                                                     $itemStart = $item['start_date'] instanceof \Carbon\Carbon 
-                                                        ? $item['start_date'] 
-                                                        : \Carbon\Carbon::parse($item['start_date']);
+                                                        ? $item['start_date']->copy()->startOfDay() 
+                                                        : \Carbon\Carbon::parse($item['start_date'])->startOfDay();
                                                     $itemEnd = $item['end_date'] instanceof \Carbon\Carbon 
-                                                        ? $item['end_date'] 
-                                                        : \Carbon\Carbon::parse($item['end_date']);
-                                                    
-                                                    // Check if date is in range (inclusive)
-                                                    $isInRange = $dateObj->greaterThanOrEqualTo($itemStart->startOfDay()) 
-                                                        && $dateObj->lessThanOrEqualTo($itemEnd->endOfDay());
-                                                    
-                                                    $isWeekend = $dateObj->isWeekend();
-                                                    $isToday = $dateObj->isToday();
-                                                    
-                                                    // Determine color based on status
+                                                        ? $item['end_date']->copy()->endOfDay() 
+                                                        : \Carbon\Carbon::parse($item['end_date'])->endOfDay();
+                                                    // Overlap: item overlaps period if itemStart <= periodEnd AND itemEnd >= periodStart
+                                                    $isInRange = $itemStart->lessThanOrEqualTo($periodEnd) && $itemEnd->greaterThanOrEqualTo($periodStart);
+                                                    $isToday = \Carbon\Carbon::today()->between($periodStart, $periodEnd);
+                                                    $isWeekend = ($periodStart->isWeekend() || $periodEnd->isWeekend()) && isset($period['key']) && strlen($period['key']) === 10;
                                                     $bgColor = '';
                                                     if ($isInRange) {
                                                         if ($item['status'] === 'completed') {
@@ -260,9 +267,10 @@
                                                     } else {
                                                         $bgColor = $isToday ? 'bg-yellow-100' : ($isWeekend ? 'bg-gray-50' : 'bg-white');
                                                     }
+                                                    $cellWidth = ($groupBy ?? 'daily') === 'daily' ? 45 : (($groupBy ?? '') === 'monthly' ? 70 : 55);
                                                 @endphp
                                                 <td class="border border-gray-300 px-1 py-2 text-center {{ $bgColor }}" 
-                                                    style="width: 45px; min-width: 45px; height: 40px;"
+                                                    style="width: {{ $cellWidth }}px; min-width: {{ $cellWidth }}px; height: 40px;"
                                                     title="{{ $isInRange ? $item['item_title'] . ' - ' . $itemStart->format('d M Y') . ' s/d ' . $itemEnd->format('d M Y') : '' }}">
                                                     @if($isInRange)
                                                         <div class="w-full h-full flex items-center justify-center">

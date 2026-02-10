@@ -38,6 +38,23 @@
                 </div>
             @endif
 
+            @if (session('error'))
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <p class="font-bold mb-1">Terjadi kesalahan:</p>
+                    <ul class="list-disc list-inside text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Task Details -->
                 <div class="lg:col-span-2">
@@ -441,7 +458,10 @@
                                                     @php
                                                         $isSuperuser = Auth::user()->position && Auth::user()->position->name === 'Superuser';
                                                         $isAssignedUser = $item->assigned_to == Auth::id();
-                                                        $canUpdateProgress = $isSuperuser || $isAssignedUser;
+                                                        $isTaskCreator = $task->created_by == Auth::id();
+                                                        $isDelegatedUser = $task->delegations->where('delegated_to', Auth::id())->isNotEmpty();
+                                                        $isDelegator = $task->delegations->where('delegated_by', Auth::id())->isNotEmpty();
+                                                        $canUpdateProgress = $isSuperuser || $isAssignedUser || $isTaskCreator || $isDelegatedUser || $isDelegator;
                                                     @endphp
                                                     @if($isSuperuser)
                                                         <a href="{{ route('task-items.edit', [$task, $item]) }}" class="bg-indigo-500 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded inline-flex items-center justify-center flex-1 sm:flex-none">
@@ -990,14 +1010,15 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('update_date').value = today;
             // Set default waktu mulai dari start_time task item, jika ada
+            // Trim to HH:MM (remove seconds if present, e.g. "08:00:00" → "08:00")
             if (startTime) {
-                document.getElementById('time_from').value = startTime;
+                document.getElementById('time_from').value = startTime.substring(0, 5);
             } else {
                 document.getElementById('time_from').value = '';
             }
             // Set default waktu selesai dari due_time task item, jika ada
             if (dueTime) {
-                document.getElementById('time_to').value = dueTime;
+                document.getElementById('time_to').value = dueTime.substring(0, 5);
             } else {
                 document.getElementById('time_to').value = '';
             }

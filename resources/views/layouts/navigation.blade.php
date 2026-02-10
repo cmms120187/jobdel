@@ -22,24 +22,25 @@
                         <span>Dashboard</span>
                     </a>
 
-                    <!-- Tasks dropdown -->
-                    <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="inline-flex items-center justify-center h-10 px-4 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition-all duration-200 whitespace-nowrap focus:outline-none">
-                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"></path>
-                            </svg>
-                            <span>Tasks</span>
-                            <svg class="w-3 h-3 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 border border-gray-200" style="display:none;">
-                            <a href="{{ route('tasks.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg">Tasks</a>
-                            <a href="{{ route('delegations.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg">Delegations</a>
-                        </div>
-                    </div>
+                    <!-- Tasks (direct link) -->
+                    <a href="{{ route('tasks.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap {{ request()->routeIs('tasks.*') ? 'bg-white text-purple-600 shadow-lg' : 'text-white hover:bg-white/20 hover:text-white' }}">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"></path>
+                        </svg>
+                        <span>Tasks</span>
+                    </a>
 
-                    <!-- Resources / Management dropdown -->
+                    <!-- Delegations (direct link) -->
+                    <a href="{{ route('delegations.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap {{ request()->routeIs('delegations.*') ? 'bg-white text-purple-600 shadow-lg' : 'text-white hover:bg-white/20 hover:text-white' }}">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.001 3.001 0 015.644 0M12 12a3 3 0 100-6 3 3 0 000 6z"></path>
+                        </svg>
+                        <span>Delegations</span>
+                    </a>
+
+                    <!-- Resources dropdown (Rooms, STO, Subordinates, User) -->
                     <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="inline-flex items-center justify-center h-10 px-4 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition-all duration-200 whitespace-nowrap focus:outline-none">
+                        <button @click="open = !open" class="inline-flex items-center justify-center h-10 px-4 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition-all duration-200 whitespace-nowrap focus:outline-none {{ request()->routeIs('rooms.*', 'sto.*', 'leader.subordinates.*', 'admin.users.*') ? 'bg-white text-purple-600 shadow-lg' : '' }}">
                             <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                             </svg>
@@ -48,18 +49,14 @@
                         </button>
                         <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50 border border-gray-200" style="display:none;">
                             <a href="{{ route('rooms.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg">Rooms</a>
+                            <a href="{{ route('sto.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">STO</a>
                             @if(Auth::user()->position && Auth::user()->position->name === 'Superuser')
                                 <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg">User</a>
+                            @else
+                                <a href="{{ route('leader.subordinates.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg">Subordinates</a>
                             @endif
                         </div>
                     </div>
-                    
-                    @if(Auth::user()->position && Auth::user()->position->name !== 'Superuser')
-                    <a href="{{ route('leader.subordinates.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap {{ request()->routeIs('leader.subordinates.index') ? 'bg-white text-purple-600 shadow-lg' : 'text-white hover:bg-white/20 hover:text-white' }}">
-                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.001 3.001 0 015.644 0M12 12a3 3 0 100-6 3 3 0 000 6z"></path></svg>
-                        <span>Subordinates</span>
-                    </a>
-                    @endif
 
                     <!-- Reports dropdown -->
                     <div x-data="{ open: false }" class="relative">
@@ -83,8 +80,8 @@
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:items-center sm:ms-6">
+            <!-- Pojok kanan: Dropdown nama user (Profile & Log out) -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm leading-4 font-medium text-white hover:bg-white/30 focus:outline-none transition ease-in-out duration-150 border border-white/30">
@@ -125,7 +122,7 @@
                 </x-dropdown>
             </div>
 
-            <!-- Hamburger -->
+            <!-- Hamburger (mobile) -->
             <div class="-me-2 flex items-center sm:hidden">
                 <button @click="open = ! open" class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-lg text-white hover:text-purple-200 hover:bg-white/20 focus:outline-none focus:bg-white/20 focus:text-purple-200 transition duration-150 ease-in-out touch-target" aria-label="Toggle menu">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -142,20 +139,19 @@
         <div class="pt-2 pb-3 space-y-0 px-2">
             <a href="{{ route('dashboard') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium rounded-lg {{ request()->routeIs('dashboard') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : 'text-gray-700 hover:bg-gray-50' }}">Dashboard</a>
 
-            <div x-data="{ openTasks: false }" class="border-t border-gray-200 pt-1">
-                <button @click="openTasks = !openTasks" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Tasks & Delegations</button>
-                <div x-show="openTasks" class="pl-2">
-                    <a href="{{ route('tasks.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Tasks</a>
-                    <a href="{{ route('delegations.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Delegations</a>
-                </div>
-            </div>
+            <a href="{{ route('tasks.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium rounded-lg {{ request()->routeIs('tasks.*') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : 'text-gray-700 hover:bg-gray-50' }}">Tasks</a>
+
+            <a href="{{ route('delegations.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium rounded-lg {{ request()->routeIs('delegations.*') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : 'text-gray-700 hover:bg-gray-50' }}">Delegations</a>
 
             <div x-data="{ openResources: false }" class="border-t border-gray-200 pt-1">
                 <button @click="openResources = !openResources" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Resources</button>
                 <div x-show="openResources" class="pl-2">
                     <a href="{{ route('rooms.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Rooms</a>
+                    <a href="{{ route('sto.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg {{ request()->routeIs('sto.*') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : '' }}">STO</a>
                     @if(Auth::user()->position && Auth::user()->position->name === 'Superuser')
                         <a href="{{ route('admin.users.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">User</a>
+                    @else
+                        <a href="{{ route('leader.subordinates.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Subordinates</a>
                     @endif
                 </div>
             </div>
@@ -173,14 +169,12 @@
                 </div>
             </div>
 
-            @if(Auth::user()->position && Auth::user()->position->name !== 'Superuser')
-            <div x-data="{ openSubordinates: false }" class="border-t border-gray-200 pt-1">
-                <button @click="openSubordinates = !openSubordinates" class="w-full text-left flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 touch-target">Subordinates</button>
-                <div x-show="openSubordinates" class="pl-2">
-                    <a href="{{ route('leader.subordinates.index') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Subordinates</a>
-                </div>
-            </div>
-            @endif
+            <a href="{{ route('profile.edit') }}" class="flex items-center min-h-[44px] px-4 py-3 text-base font-medium rounded-lg border-t border-gray-200 {{ request()->routeIs('profile.*') ? 'bg-purple-100 text-purple-600 border-l-4 border-purple-600' : 'text-gray-700 hover:bg-gray-50' }}">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Profil
+            </a>
         </div>
 
         <!-- Responsive Settings Options -->

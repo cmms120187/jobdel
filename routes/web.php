@@ -11,6 +11,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Leader\SubordinateController;
 use App\Http\Controllers\Leader\ReportController as LeaderReportController;
+use App\Http\Controllers\StoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -63,6 +64,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Secure download for progress update attachments
     Route::get('/progress/{progressUpdate}/file/{index}', [ProgressUpdateController::class, 'downloadAttachment'])->name('progress.download-file');
     
+    // STO (Struktur Organisasi berdasarkan hirarki users)
+    Route::get('/sto', [StoController::class, 'index'])->name('sto.index');
+
     // Reports routes
     Route::get('/reports/timeline', [ReportController::class, 'timeline'])->name('reports.timeline');
     Route::get('/reports/tasks/{task}/print', [ReportController::class, 'printTask'])->name('reports.print-task');

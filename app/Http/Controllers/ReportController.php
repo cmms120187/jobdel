@@ -24,6 +24,10 @@ class ReportController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
         $filterUserId = $request->get('user_id');
+        $groupBy = $request->get('group_by', 'daily'); // daily | weekly | monthly
+        if (!in_array($groupBy, ['daily', 'weekly', 'monthly'])) {
+            $groupBy = 'daily';
+        }
         
         // Get subordinates for filter dropdown
         $subordinates = $user->getSubordinatesIncludingSelf();
@@ -122,14 +126,16 @@ class ReportController extends Controller
         foreach ($taskItems as $item) {
             $task = $item->task;
             // Use task item's start_date and due_date first, then fallback to task dates
-            $startDate = $item->start_date 
-                ?: ($item->due_date 
-                    ? $item->due_date->copy()->subDays(7) 
-                    : ($task->start_date ?: Carbon::today()));
-            $endDate = $item->due_date 
-                ?: ($item->start_date 
-                    ? $item->start_date->copy()->addDays(7) 
-                    : ($task->due_date ?: $startDate->copy()->addDays(7)));
+            $startDate = $item->start_date
+                ? Carbon::parse($item->start_date)
+                : ($item->due_date
+                    ? Carbon::parse($item->due_date)->copy()->subDays(7)
+                    : ($task->start_date ? Carbon::parse($task->start_date) : Carbon::today()));
+            $endDate = $item->due_date
+                ? Carbon::parse($item->due_date)
+                : ($item->start_date
+                    ? Carbon::parse($item->start_date)->copy()->addDays(7)
+                    : ($task->due_date ? Carbon::parse($task->due_date) : $startDate->copy()->addDays(7)));
             
             if (!$minDate || $startDate < $minDate) {
                 $minDate = $startDate->copy();
@@ -149,26 +155,75 @@ class ReportController extends Controller
             $maxDate->addDays(7);
         }
         
-        // Generate date range array
+        // Generate date range / period columns based on group_by
         $dateRange = [];
-        $current = $minDate->copy();
-        while ($current <= $maxDate) {
-            $dateRange[] = $current->format('Y-m-d');
-            $current->addDay();
-        }
-        
-        // Limit date range to prevent too many columns (max 90 days visible)
-        if (count($dateRange) > 90) {
-            // Show 45 days before and after today
-            $today = Carbon::today();
-            $start = $today->copy()->subDays(45);
-            $end = $today->copy()->addDays(45);
-            
-            $dateRange = [];
-            $current = $start->copy();
-            while ($current <= $end) {
-                $dateRange[] = $current->format('Y-m-d');
+        if ($groupBy === 'daily') {
+            $current = $minDate->copy();
+            while ($current <= $maxDate) {
+                $dateRange[] = [
+                    'key' => $current->format('Y-m-d'),
+                    'label' => $current->format('d'),
+                    'sublabel' => $current->format('M'),
+                    'start' => $current->copy()->startOfDay(),
+                    'end' => $current->copy()->endOfDay(),
+                ];
                 $current->addDay();
+            }
+            // Limit to max 90 columns for daily
+            if (count($dateRange) > 90) {
+                $today = Carbon::today();
+                $start = $today->copy()->subDays(45);
+                $end = $today->copy()->addDays(45);
+                $dateRange = [];
+                $current = $start->copy();
+                while ($current <= $end) {
+                    $dateRange[] = [
+                        'key' => $current->format('Y-m-d'),
+                        'label' => $current->format('d'),
+                        'sublabel' => $current->format('M'),
+                        'start' => $current->copy()->startOfDay(),
+                        'end' => $current->copy()->endOfDay(),
+                    ];
+                    $current->addDay();
+                }
+            }
+        } elseif ($groupBy === 'weekly') {
+            // Start from Monday of the week containing minDate
+            $current = $minDate->copy()->startOfWeek(Carbon::MONDAY);
+            while ($current <= $maxDate) {
+                $weekEnd = $current->copy()->endOfWeek(Carbon::MONDAY);
+                $weekNum = $current->weekOfYear;
+                $monthShort = $current->format('M');
+                $dateRange[] = [
+                    'key' => $current->format('Y-\WW') . str_pad($weekNum, 2, '0', STR_PAD_LEFT),
+                    'label' => 'W' . $weekNum,
+                    'sublabel' => $monthShort,
+                    'start' => $current->copy(),
+                    'end' => $weekEnd,
+                ];
+                $current->addWeek()->startOfWeek(Carbon::MONDAY);
+            }
+            // Limit to max 52 columns for weekly (~1 year)
+            if (count($dateRange) > 52) {
+                $dateRange = array_slice($dateRange, 0, 52);
+            }
+        } else {
+            // monthly
+            $current = $minDate->copy()->startOfMonth();
+            while ($current <= $maxDate) {
+                $monthEnd = $current->copy()->endOfMonth();
+                $dateRange[] = [
+                    'key' => $current->format('Y-m'),
+                    'label' => $current->format('M'),
+                    'sublabel' => $current->format('Y'),
+                    'start' => $current->copy(),
+                    'end' => $monthEnd,
+                ];
+                $current->addMonth()->startOfMonth();
+            }
+            // Limit to max 24 columns for monthly (~2 years)
+            if (count($dateRange) > 24) {
+                $dateRange = array_slice($dateRange, 0, 24);
             }
         }
         
@@ -222,14 +277,16 @@ class ReportController extends Controller
             }
             
             // Determine date range for this item (use task item's start_date and due_date first)
-            $itemStartDate = $item->start_date 
-                ?: ($item->due_date 
-                    ? $item->due_date->copy()->subDays(7) 
-                    : ($task->start_date ?: Carbon::today()));
-            $itemEndDate = $item->due_date 
-                ?: ($item->start_date 
-                    ? $item->start_date->copy()->addDays(7) 
-                    : ($task->due_date ?: $itemStartDate->copy()->addDays(7)));
+            $itemStartDate = $item->start_date
+                ? Carbon::parse($item->start_date)
+                : ($item->due_date
+                    ? Carbon::parse($item->due_date)->copy()->subDays(7)
+                    : ($task->start_date ? Carbon::parse($task->start_date) : Carbon::today()));
+            $itemEndDate = $item->due_date
+                ? Carbon::parse($item->due_date)
+                : ($item->start_date
+                    ? Carbon::parse($item->start_date)->copy()->addDays(7)
+                    : ($task->due_date ? Carbon::parse($task->due_date) : $itemStartDate->copy()->addDays(7)));
             
             $groupedData[$taskId]['items'][] = [
                 'id' => $item->id,
@@ -256,7 +313,7 @@ class ReportController extends Controller
             ? \App\Models\User::with('position')->orderBy('name')->get()
             : $subordinates;
         
-        return view('reports.timeline', compact('reportData', 'dateRange', 'rooms', 'roomId', 'status', 'dateFrom', 'dateTo', 'isSuperuser', 'filterUsers', 'filterUserId'));
+        return view('reports.timeline', compact('reportData', 'dateRange', 'rooms', 'roomId', 'status', 'dateFrom', 'dateTo', 'groupBy', 'isSuperuser', 'filterUsers', 'filterUserId'));
     }
 
     /**

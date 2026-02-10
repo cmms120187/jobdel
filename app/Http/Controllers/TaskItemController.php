@@ -128,6 +128,14 @@ class TaskItemController extends Controller
             abort(403, 'Hanya Administrator yang dapat mengedit detail pekerjaan.');
         }
 
+        // Normalize time fields: trim seconds (HH:MM:SS → HH:MM)
+        if ($request->filled('start_time') && strlen($request->input('start_time')) > 5) {
+            $request->merge(['start_time' => substr($request->input('start_time'), 0, 5)]);
+        }
+        if ($request->filled('due_time') && strlen($request->input('due_time')) > 5) {
+            $request->merge(['due_time' => substr($request->input('due_time'), 0, 5)]);
+        }
+
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
@@ -199,23 +207,32 @@ class TaskItemController extends Controller
             abort(404);
         }
 
-        // Authorization: Only assigned user or Administrator (Superuser) can update progress
+        // Authorization: assigned user, task creator, delegated user, or Superuser can update progress
         $user = Auth::user();
         $isSuperuser = $user->position && $user->position->name === 'Superuser';
         $isAssignedUser = $taskItem->assigned_to == $user->id;
+        $isTaskCreator = $task->created_by == $user->id;
+        $isDelegatedUser = $task->delegations()->where('delegated_to', $user->id)->exists();
+        $isDelegator = $task->delegations()->where('delegated_by', $user->id)->exists();
         
-        if (!$isSuperuser && !$isAssignedUser) {
-            abort(403, 'Anda tidak memiliki izin untuk mengupdate progress pekerjaan ini. Hanya user yang di-assign atau Administrator yang dapat melakukan update.');
+        if (!$isSuperuser && !$isAssignedUser && !$isTaskCreator && !$isDelegatedUser && !$isDelegator) {
+            abort(403, 'Anda tidak memiliki izin untuk mengupdate progress pekerjaan ini.');
         }
 
-        // Allow multiple updates as long as progress is not 100%
-        // If progress is 100%, only allow notes update (no progress change)
+        // Normalize time fields: trim seconds (HH:MM:SS → HH:MM) since DB TIME column stores with seconds
+        if ($request->filled('time_from') && strlen($request->input('time_from')) > 5) {
+            $request->merge(['time_from' => substr($request->input('time_from'), 0, 5)]);
+        }
+        if ($request->filled('time_to') && strlen($request->input('time_to')) > 5) {
+            $request->merge(['time_to' => substr($request->input('time_to'), 0, 5)]);
+        }
+
         $validated = $request->validate([
             'progress_percentage' => 'required|integer|min:0|max:100',
             'notes' => 'nullable|string',
             'update_date' => 'required|date',
             'time_from' => 'nullable|date_format:H:i',
-            'time_to' => 'nullable|date_format:H:i|after_or_equal:time_from',
+            'time_to' => 'nullable|date_format:H:i',
             'photos' => 'nullable|array',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Max 5MB per photo
         ]);
@@ -487,13 +504,21 @@ class TaskItemController extends Controller
             abort(403, 'Hanya Administrator yang dapat mengedit progress update.');
         }
 
+        // Normalize time fields: trim seconds (HH:MM:SS → HH:MM)
+        if ($request->filled('time_from') && strlen($request->input('time_from')) > 5) {
+            $request->merge(['time_from' => substr($request->input('time_from'), 0, 5)]);
+        }
+        if ($request->filled('time_to') && strlen($request->input('time_to')) > 5) {
+            $request->merge(['time_to' => substr($request->input('time_to'), 0, 5)]);
+        }
+
         $validated = $request->validate([
             'new_progress_percentage' => 'required|integer|min:0|max:100',
             'old_progress_percentage' => 'required|integer|min:0|max:100',
             'notes' => 'nullable|string',
             'update_date' => 'required|date',
             'time_from' => 'nullable|date_format:H:i',
-            'time_to' => 'nullable|date_format:H:i|after_or_equal:time_from',
+            'time_to' => 'nullable|date_format:H:i',
             'photos' => 'nullable|array',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
